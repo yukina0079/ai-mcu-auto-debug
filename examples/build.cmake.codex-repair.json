@@ -1,0 +1,31 @@
+{
+  "backend": "cmake",
+  "source_dir": ".",
+  "build_dir": "build",
+  "configure_command": [
+    "cmake",
+    "-S",
+    ".",
+    "-B",
+    "build"
+  ],
+  "build_command": [
+    "cmake",
+    "--build",
+    "build"
+  ],
+  "flash_command": null,
+  "smoke_test_command": [
+    "pytest",
+    "tests"
+  ],
+  "repair_command": [
+    "codex",
+    "exec",
+    "--ask-for-approval",
+    "never",
+    "Read the JSON build failure context from stdin, fix the build with minimal code changes, run the relevant build command again, and stop."
+  ],
+  "repair_timeout_s": 900,
+  "max_repair_iterations": 3
+}

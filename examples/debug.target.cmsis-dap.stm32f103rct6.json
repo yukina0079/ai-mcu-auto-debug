@@ -1,0 +1,24 @@
+{
+  "backend": "openocd-gdb",
+  "executable": "build/stm32f103rct6_blinky/firmware.elf",
+  "gdb_path": "arm-none-eabi-gdb",
+  "remote": "localhost:3333",
+  "cwd": ".",
+  "log_path": "debug_runs/debug_commands.jsonl",
+  "server_command": [
+    "openocd",
+    "-f",
+    "interface/cmsis-dap.cfg",
+    "-c",
+    "transport select swd",
+    "-f",
+    "target/stm32f1x.cfg",
+    "-c",
+    "adapter speed 100"
+  ],
+  "server_startup_delay_s": 2.0,
+  "connect_retries": 5,
+  "connect_retry_delay_s": 1.0,
+  "recover_on_disconnect": true,
+  "command_retries": 2
+}

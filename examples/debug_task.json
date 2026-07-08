@@ -1,0 +1,22 @@
+{
+  "name": "first_phase_smoke_debug",
+  "record_path": "debug_runs/task_records.jsonl",
+  "reset_before_run": true,
+  "breakpoints": [
+    "main"
+  ],
+  "step_count": 1,
+  "break_timeout_s": 10.0,
+  "registers": [
+    "pc",
+    "sp",
+    "lr",
+    "xpsr"
+  ],
+  "memory_reads": [
+    {
+      "address": "0x20000000",
+      "length": 32
+    }
+  ]
+}

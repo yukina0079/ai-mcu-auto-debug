@@ -1,0 +1,50 @@
+{
+  "name": "first_phase_realtime_sequence",
+  "operations": [
+    {
+      "operation": "reset",
+      "params": {
+        "halt": true
+      }
+    },
+    {
+      "operation": "set-breakpoint",
+      "params": {
+        "location": "main"
+      }
+    },
+    {
+      "operation": "resume",
+      "params": {}
+    },
+    {
+      "operation": "wait-for-stop",
+      "params": {
+        "timeout_s": 10
+      }
+    },
+    {
+      "operation": "step",
+      "params": {}
+    },
+    {
+      "operation": "read-register",
+      "params": {
+        "register": "pc"
+      }
+    },
+    {
+      "operation": "read-register",
+      "params": {
+        "register": "sp"
+      }
+    },
+    {
+      "operation": "read-memory",
+      "params": {
+        "address": "0x20000000",
+        "length": 32
+      }
+    }
+  ]
+}

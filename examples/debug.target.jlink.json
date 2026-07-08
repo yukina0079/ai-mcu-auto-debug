@@ -1,0 +1,24 @@
+{
+  "backend": "jlink-gdb",
+  "executable": "build/firmware.elf",
+  "gdb_path": "arm-none-eabi-gdb",
+  "remote": "localhost:2331",
+  "cwd": ".",
+  "log_path": "debug_runs/debug_commands.jsonl",
+  "server_command": [
+    "JLinkGDBServerCL",
+    "-device",
+    "STM32F103C8",
+    "-if",
+    "SWD",
+    "-speed",
+    "4000",
+    "-port",
+    "2331"
+  ],
+  "server_startup_delay_s": 2.0,
+  "connect_retries": 5,
+  "connect_retry_delay_s": 1.0,
+  "recover_on_disconnect": true,
+  "command_retries": 2
+}

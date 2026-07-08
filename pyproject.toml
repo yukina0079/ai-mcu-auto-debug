@@ -1,0 +1,14 @@
+[project]
+name = "ai-mcu-debug"
+version = "0.1.0"
+description = "Low-coupling AI assisted MCU debug automation framework"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+ai-mcu-debug = "ai_mcu_debug.cli:main"
+ai-mcu-debug-mcp = "ai_mcu_debug.mcp_server:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,23 @@
+{
+  "backend": "pyocd-gdb",
+  "executable": "build/stm32f103rct6_blinky/firmware.elf",
+  "gdb_path": "arm-none-eabi-gdb",
+  "remote": "localhost:3333",
+  "cwd": ".",
+  "log_path": "debug_runs/debug_commands.jsonl",
+  "server_command": [
+    "pyocd",
+    "gdbserver",
+    "--target",
+    "stm32f103rc",
+    "--frequency",
+    "100000",
+    "--port",
+    "3333"
+  ],
+  "server_startup_delay_s": 2.0,
+  "connect_retries": 5,
+  "connect_retry_delay_s": 1.0,
+  "recover_on_disconnect": true,
+  "command_retries": 2
+}

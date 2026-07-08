@@ -1,0 +1,22 @@
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARM_GCC_BIN)
+
+if(NOT DEFINED ARM_GCC_BIN)
+    find_program(ARM_GCC_EXECUTABLE arm-none-eabi-gcc)
+    if(NOT ARM_GCC_EXECUTABLE)
+        message(FATAL_ERROR "Set ARM_GCC_BIN to the directory containing arm-none-eabi-gcc")
+    endif()
+    get_filename_component(ARM_GCC_BIN "${ARM_GCC_EXECUTABLE}" DIRECTORY)
+endif()
+
+set(ARM_GCC_BIN "${ARM_GCC_BIN}" CACHE PATH "Directory containing arm-none-eabi-gcc.exe")
+find_program(CMAKE_C_COMPILER arm-none-eabi-gcc HINTS "${ARM_GCC_BIN}" REQUIRED)
+find_program(CMAKE_ASM_COMPILER arm-none-eabi-gcc HINTS "${ARM_GCC_BIN}" REQUIRED)
+find_program(CMAKE_OBJCOPY arm-none-eabi-objcopy HINTS "${ARM_GCC_BIN}" REQUIRED)
+find_program(CMAKE_SIZE arm-none-eabi-size HINTS "${ARM_GCC_BIN}" REQUIRED)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)

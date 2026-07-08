@@ -1,0 +1,767 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-06T10:22:51.250310+00:00",
+  "chip": "STM32F103C8",
+  "board": "stm32f103_blinky",
+  "package": "LQFP48",
+  "sources": {
+    "svd": "examples\\svd\\STM32F103_min.svd",
+    "linker": "examples\\firmware\\stm32f103_blinky\\linker.ld",
+    "startup": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c",
+    "documents": [
+      {
+        "kind": "datasheet",
+        "path": "examples\\docs\\stm32f103_datasheet_notes.md"
+      },
+      {
+        "kind": "errata",
+        "path": "examples\\docs\\stm32f103_errata_notes.md"
+      }
+    ]
+  },
+  "device": {
+    "name": "STM32F103_min",
+    "description": "Minimal CMSIS-SVD subset for AI MCU debug context tests.",
+    "cpu": {
+      "name": "CM3",
+      "revision": "r1p1",
+      "endian": "little",
+      "mpu_present": "true",
+      "fpu_present": "false",
+      "nvic_prio_bits": 4
+    },
+    "peripherals": [
+      {
+        "name": "RCC",
+        "description": "Reset and clock control.",
+        "base_address": 1073876992,
+        "source": "examples\\svd\\STM32F103_min.svd",
+        "registers": [
+          {
+            "name": "APB2ENR",
+            "qualified_name": "RCC.APB2ENR",
+            "description": "APB2 peripheral clock enable register.",
+            "address_offset": 24,
+            "address": 1073877016,
+            "size": 32,
+            "access": "read-write",
+            "reset_value": 0,
+            "source": "examples\\svd\\STM32F103_min.svd",
+            "fields": [
+              {
+                "name": "AFIOEN",
+                "description": "Alternate function IO clock enable.",
+                "bit_offset": 0,
+                "bit_width": 1,
+                "access": null
+              },
+              {
+                "name": "IOPAEN",
+                "description": "IO port A clock enable.",
+                "bit_offset": 2,
+                "bit_width": 1,
+                "access": null
+              },
+              {
+                "name": "IOPBEN",
+                "description": "IO port B clock enable.",
+                "bit_offset": 3,
+                "bit_width": 1,
+                "access": null
+              },
+              {
+                "name": "IOPCEN",
+                "description": "IO port C clock enable.",
+                "bit_offset": 4,
+                "bit_width": 1,
+                "access": null
+              },
+              {
+                "name": "USART1EN",
+                "description": "USART1 clock enable.",
+                "bit_offset": 14,
+                "bit_width": 1,
+                "access": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "GPIOC",
+        "description": "General-purpose IO port C.",
+        "base_address": 1073811456,
+        "source": "examples\\svd\\STM32F103_min.svd",
+        "registers": [
+          {
+            "name": "CRH",
+            "qualified_name": "GPIOC.CRH",
+            "description": "Port configuration register high.",
+            "address_offset": 4,
+            "address": 1073811460,
+            "size": 32,
+            "access": "read-write",
+            "reset_value": 1145324612,
+            "source": "examples\\svd\\STM32F103_min.svd",
+            "fields": [
+              {
+                "name": "MODE13",
+                "description": "Port x mode bits for pin 13.",
+                "bit_offset": 20,
+                "bit_width": 2,
+                "access": null
+              },
+              {
+                "name": "CNF13",
+                "description": "Port x configuration bits for pin 13.",
+                "bit_offset": 22,
+                "bit_width": 2,
+                "access": null
+              }
+            ]
+          },
+          {
+            "name": "IDR",
+            "qualified_name": "GPIOC.IDR",
+            "description": "Port input data register.",
+            "address_offset": 8,
+            "address": 1073811464,
+            "size": 32,
+            "access": "read-only",
+            "reset_value": 0,
+            "source": "examples\\svd\\STM32F103_min.svd",
+            "fields": [
+              {
+                "name": "IDR13",
+                "description": "Port input data for pin 13.",
+                "bit_offset": 13,
+                "bit_width": 1,
+                "access": "read-only"
+              }
+            ]
+          },
+          {
+            "name": "BSRR",
+            "qualified_name": "GPIOC.BSRR",
+            "description": "Port bit set/reset register. Some fields are write 1 to clear/reset style.",
+            "address_offset": 16,
+            "address": 1073811472,
+            "size": 32,
+            "access": "write-only",
+            "reset_value": 0,
+            "source": "examples\\svd\\STM32F103_min.svd",
+            "fields": [
+              {
+                "name": "BS13",
+                "description": "Set bit for pin 13.",
+                "bit_offset": 13,
+                "bit_width": 1,
+                "access": null
+              },
+              {
+                "name": "BR13",
+                "description": "Reset bit for pin 13; write 1 to clear/reset output bit.",
+                "bit_offset": 29,
+                "bit_width": 1,
+                "access": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "memory_regions": [
+    {
+      "name": "FLASH",
+      "origin": 134217728,
+      "length": 65536,
+      "end": 134283264,
+      "source": "examples\\firmware\\stm32f103_blinky\\linker.ld"
+    },
+    {
+      "name": "RAM",
+      "origin": 536870912,
+      "length": 20480,
+      "end": 536891392,
+      "source": "examples\\firmware\\stm32f103_blinky\\linker.ld"
+    }
+  ],
+  "interrupt_vectors": [
+    {
+      "index": 0,
+      "symbol": "(void (*)(void))(&_estack)",
+      "source_line": 2,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 1,
+      "symbol": "Reset_Handler",
+      "source_line": 3,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 2,
+      "symbol": "NMI_Handler",
+      "source_line": 4,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 3,
+      "symbol": "HardFault_Handler",
+      "source_line": 5,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 4,
+      "symbol": "MemManage_Handler",
+      "source_line": 6,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 5,
+      "symbol": "BusFault_Handler",
+      "source_line": 7,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 6,
+      "symbol": "UsageFault_Handler",
+      "source_line": 8,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 7,
+      "symbol": "0",
+      "source_line": 9,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 8,
+      "symbol": "0",
+      "source_line": 10,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 9,
+      "symbol": "0",
+      "source_line": 11,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 10,
+      "symbol": "0",
+      "source_line": 12,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 11,
+      "symbol": "SVC_Handler",
+      "source_line": 13,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 12,
+      "symbol": "DebugMon_Handler",
+      "source_line": 14,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 13,
+      "symbol": "0",
+      "source_line": 15,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 14,
+      "symbol": "PendSV_Handler",
+      "source_line": 16,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    },
+    {
+      "index": 15,
+      "symbol": "SysTick_Handler",
+      "source_line": 17,
+      "source": "examples\\firmware\\stm32f103_blinky\\src\\startup_stm32f103.c"
+    }
+  ],
+  "register_index": {
+    "RCC.APB2ENR": {
+      "name": "APB2ENR",
+      "qualified_name": "RCC.APB2ENR",
+      "description": "APB2 peripheral clock enable register.",
+      "address_offset": 24,
+      "address": 1073877016,
+      "size": 32,
+      "access": "read-write",
+      "reset_value": 0,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "AFIOEN",
+          "description": "Alternate function IO clock enable.",
+          "bit_offset": 0,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "IOPAEN",
+          "description": "IO port A clock enable.",
+          "bit_offset": 2,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "IOPBEN",
+          "description": "IO port B clock enable.",
+          "bit_offset": 3,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "IOPCEN",
+          "description": "IO port C clock enable.",
+          "bit_offset": 4,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "USART1EN",
+          "description": "USART1 clock enable.",
+          "bit_offset": 14,
+          "bit_width": 1,
+          "access": null
+        }
+      ]
+    },
+    "0x40021018": {
+      "name": "APB2ENR",
+      "qualified_name": "RCC.APB2ENR",
+      "description": "APB2 peripheral clock enable register.",
+      "address_offset": 24,
+      "address": 1073877016,
+      "size": 32,
+      "access": "read-write",
+      "reset_value": 0,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "AFIOEN",
+          "description": "Alternate function IO clock enable.",
+          "bit_offset": 0,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "IOPAEN",
+          "description": "IO port A clock enable.",
+          "bit_offset": 2,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "IOPBEN",
+          "description": "IO port B clock enable.",
+          "bit_offset": 3,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "IOPCEN",
+          "description": "IO port C clock enable.",
+          "bit_offset": 4,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "USART1EN",
+          "description": "USART1 clock enable.",
+          "bit_offset": 14,
+          "bit_width": 1,
+          "access": null
+        }
+      ]
+    },
+    "GPIOC.CRH": {
+      "name": "CRH",
+      "qualified_name": "GPIOC.CRH",
+      "description": "Port configuration register high.",
+      "address_offset": 4,
+      "address": 1073811460,
+      "size": 32,
+      "access": "read-write",
+      "reset_value": 1145324612,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "MODE13",
+          "description": "Port x mode bits for pin 13.",
+          "bit_offset": 20,
+          "bit_width": 2,
+          "access": null
+        },
+        {
+          "name": "CNF13",
+          "description": "Port x configuration bits for pin 13.",
+          "bit_offset": 22,
+          "bit_width": 2,
+          "access": null
+        }
+      ]
+    },
+    "0x40011004": {
+      "name": "CRH",
+      "qualified_name": "GPIOC.CRH",
+      "description": "Port configuration register high.",
+      "address_offset": 4,
+      "address": 1073811460,
+      "size": 32,
+      "access": "read-write",
+      "reset_value": 1145324612,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "MODE13",
+          "description": "Port x mode bits for pin 13.",
+          "bit_offset": 20,
+          "bit_width": 2,
+          "access": null
+        },
+        {
+          "name": "CNF13",
+          "description": "Port x configuration bits for pin 13.",
+          "bit_offset": 22,
+          "bit_width": 2,
+          "access": null
+        }
+      ]
+    },
+    "GPIOC.IDR": {
+      "name": "IDR",
+      "qualified_name": "GPIOC.IDR",
+      "description": "Port input data register.",
+      "address_offset": 8,
+      "address": 1073811464,
+      "size": 32,
+      "access": "read-only",
+      "reset_value": 0,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "IDR13",
+          "description": "Port input data for pin 13.",
+          "bit_offset": 13,
+          "bit_width": 1,
+          "access": "read-only"
+        }
+      ]
+    },
+    "0x40011008": {
+      "name": "IDR",
+      "qualified_name": "GPIOC.IDR",
+      "description": "Port input data register.",
+      "address_offset": 8,
+      "address": 1073811464,
+      "size": 32,
+      "access": "read-only",
+      "reset_value": 0,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "IDR13",
+          "description": "Port input data for pin 13.",
+          "bit_offset": 13,
+          "bit_width": 1,
+          "access": "read-only"
+        }
+      ]
+    },
+    "GPIOC.BSRR": {
+      "name": "BSRR",
+      "qualified_name": "GPIOC.BSRR",
+      "description": "Port bit set/reset register. Some fields are write 1 to clear/reset style.",
+      "address_offset": 16,
+      "address": 1073811472,
+      "size": 32,
+      "access": "write-only",
+      "reset_value": 0,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "BS13",
+          "description": "Set bit for pin 13.",
+          "bit_offset": 13,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "BR13",
+          "description": "Reset bit for pin 13; write 1 to clear/reset output bit.",
+          "bit_offset": 29,
+          "bit_width": 1,
+          "access": null
+        }
+      ]
+    },
+    "0x40011010": {
+      "name": "BSRR",
+      "qualified_name": "GPIOC.BSRR",
+      "description": "Port bit set/reset register. Some fields are write 1 to clear/reset style.",
+      "address_offset": 16,
+      "address": 1073811472,
+      "size": 32,
+      "access": "write-only",
+      "reset_value": 0,
+      "source": "examples\\svd\\STM32F103_min.svd",
+      "fields": [
+        {
+          "name": "BS13",
+          "description": "Set bit for pin 13.",
+          "bit_offset": 13,
+          "bit_width": 1,
+          "access": null
+        },
+        {
+          "name": "BR13",
+          "description": "Reset bit for pin 13; write 1 to clear/reset output bit.",
+          "bit_offset": 29,
+          "bit_width": 1,
+          "access": null
+        }
+      ]
+    }
+  },
+  "document_chunks": [
+    {
+      "kind": "datasheet",
+      "path": "examples\\docs\\stm32f103_datasheet_notes.md",
+      "title": "stm32f103_datasheet_notes",
+      "offset": 0,
+      "text": "# STM32F103 Datasheet Notes\n\nThis local note stands in for imported datasheet excerpts during tests.\n\n- STM32F103 uses an ARM Cortex-M3 core.\n- Flash memory starts at 0x08000000.\n- SRAM starts at 0x20000000.\n- GPIO port C pin 13 is commonly connected to a board LED on small development boards.\n"
+    },
+    {
+      "kind": "errata",
+      "path": "examples\\docs\\stm32f103_errata_notes.md",
+      "title": "stm32f103_errata_notes",
+      "offset": 0,
+      "text": "# STM32F103 Errata Notes\n\nThis local note stands in for imported errata excerpts during tests.\n\n- Always check the actual errata document for the exact part number and revision.\n- If behavior differs from register documentation, mark the debug conclusion as uncertain until confirmed.\n- GPIOC.CRH behavior differs from register documentation on affected revision; use workaround before writing MODE13/CNF13.\n"
+    }
+  ],
+  "datasheet_facts": [
+    {
+      "kind": "cpu_core",
+      "text": "STM32F103 uses an ARM Cortex-M3 core.",
+      "source": {
+        "kind": "datasheet",
+        "path": "examples\\docs\\stm32f103_datasheet_notes.md",
+        "title": "stm32f103_datasheet_notes",
+        "offset": 102,
+        "line_start": 5,
+        "line_end": 5
+      }
+    },
+    {
+      "kind": "flash_base",
+      "text": "Flash memory starts at 0x08000000.",
+      "source": {
+        "kind": "datasheet",
+        "path": "examples\\docs\\stm32f103_datasheet_notes.md",
+        "title": "stm32f103_datasheet_notes",
+        "offset": 142,
+        "line_start": 6,
+        "line_end": 6
+      }
+    },
+    {
+      "kind": "ram_base",
+      "text": "SRAM starts at 0x20000000.",
+      "source": {
+        "kind": "datasheet",
+        "path": "examples\\docs\\stm32f103_datasheet_notes.md",
+        "title": "stm32f103_datasheet_notes",
+        "offset": 179,
+        "line_start": 7,
+        "line_end": 7
+      }
+    },
+    {
+      "kind": "board_pin",
+      "text": "GPIO port C pin 13 is commonly connected to a board LED on small development boards.",
+      "source": {
+        "kind": "datasheet",
+        "path": "examples\\docs\\stm32f103_datasheet_notes.md",
+        "title": "stm32f103_datasheet_notes",
+        "offset": 208,
+        "line_start": 8,
+        "line_end": 8
+      }
+    }
+  ],
+  "errata_risks": [
+    {
+      "id": "errata:658ef0d20b",
+      "title": "Mark conclusion uncertain when behavior differs from documentation",
+      "category": "documentation_mismatch",
+      "severity": "warning",
+      "confidence": "high",
+      "applies_to": {
+        "chip": "STM32F103C8",
+        "part_number": null,
+        "revision": null
+      },
+      "subjects": {
+        "peripherals": [],
+        "registers": [],
+        "fields": [],
+        "addresses": [],
+        "keywords": [
+          "behavior differs",
+          "debug",
+          "differs from",
+          "register documentation",
+          "uncertain"
+        ]
+      },
+      "trigger": "Observed behavior differs from documented register or peripheral behavior.",
+      "impact": "AI conclusion may be wrong if it trusts only nominal documentation.",
+      "mitigation": "Mark the conclusion as uncertain and cite errata evidence.",
+      "actions": [
+        "mark_uncertain",
+        "require_confirmation",
+        "cite_source"
+      ],
+      "guard": {
+        "operations": [],
+        "effect": "warn"
+      },
+      "source": {
+        "kind": "errata",
+        "path": "examples\\docs\\stm32f103_errata_notes.md",
+        "title": "stm32f103_errata_notes",
+        "offset": 178,
+        "line_start": 6,
+        "line_end": 6
+      },
+      "evidence": "- If behavior differs from register documentation, mark the debug conclusion as uncertain until confirmed.",
+      "text": "If behavior differs from register documentation, mark the debug conclusion as uncertain until confirmed"
+    },
+    {
+      "id": "errata:6930cf1b96",
+      "title": "Mark conclusion uncertain when behavior differs from documentation",
+      "category": "documentation_mismatch",
+      "severity": "warning",
+      "confidence": "high",
+      "applies_to": {
+        "chip": "STM32F103C8",
+        "part_number": null,
+        "revision": null
+      },
+      "subjects": {
+        "peripherals": [
+          "GPIOC"
+        ],
+        "registers": [
+          "GPIOC.CRH"
+        ],
+        "fields": [
+          "CNF13",
+          "MODE13"
+        ],
+        "addresses": [
+          "0x40011004"
+        ],
+        "keywords": [
+          "behavior differs",
+          "differs from",
+          "register documentation",
+          "revision",
+          "workaround"
+        ]
+      },
+      "trigger": "Observed behavior differs from documented register or peripheral behavior.",
+      "impact": "AI conclusion may be wrong if it trusts only nominal documentation.",
+      "mitigation": "Mark the conclusion as uncertain and cite errata evidence.",
+      "actions": [
+        "mark_uncertain",
+        "require_confirmation",
+        "cite_source"
+      ],
+      "guard": {
+        "operations": [],
+        "effect": "warn"
+      },
+      "source": {
+        "kind": "errata",
+        "path": "examples\\docs\\stm32f103_errata_notes.md",
+        "title": "stm32f103_errata_notes",
+        "offset": 285,
+        "line_start": 7,
+        "line_end": 7
+      },
+      "evidence": "- GPIOC.CRH behavior differs from register documentation on affected revision; use workaround before writing MODE13/CNF13.",
+      "text": "GPIOC.CRH behavior differs from register documentation on affected revision; use workaround before writing MODE13/CNF13"
+    },
+    {
+      "id": "errata:a92461b8de",
+      "title": "Verify exact part number and revision",
+      "category": "revision_scope",
+      "severity": "advisory",
+      "confidence": "high",
+      "applies_to": {
+        "chip": "STM32F103C8",
+        "part_number": null,
+        "revision": null
+      },
+      "subjects": {
+        "peripherals": [],
+        "registers": [],
+        "fields": [],
+        "addresses": [],
+        "keywords": [
+          "part number",
+          "revision"
+        ]
+      },
+      "trigger": "Using errata evidence for this chip.",
+      "impact": "Errata may not apply to the actual silicon revision.",
+      "mitigation": "Check device marking/revision ID against the vendor errata.",
+      "actions": [
+        "verify_part_revision",
+        "cite_source"
+      ],
+      "guard": {
+        "operations": [],
+        "effect": "warn"
+      },
+      "source": {
+        "kind": "errata",
+        "path": "examples\\docs\\stm32f103_errata_notes.md",
+        "title": "stm32f103_errata_notes",
+        "offset": 96,
+        "line_start": 5,
+        "line_end": 5
+      },
+      "evidence": "- Always check the actual errata document for the exact part number and revision.",
+      "text": "Always check the actual errata document for the exact part number and revision"
+    }
+  ],
+  "risk_rules": {
+    "dangerous_address_ranges": [
+      {
+        "name": "FLASH",
+        "start": 134217728,
+        "end": 134283264,
+        "reason": "Non-volatile memory write can erase or corrupt firmware/configuration."
+      }
+    ],
+    "errata_policy": "warn_and_cite",
+    "default_write_policy": "deny_unknown_registers"
+  },
+  "debug_notes": [
+    "Use mcu_context.json as evidence before explaining or writing registers for STM32F103C8.",
+    "CPU core from SVD: CM3.",
+    "Memory ranges are taken from linker script and should be checked before raw memory writes.",
+    "Interrupt vector symbols are taken from startup file and can guide reset/HardFault debugging.",
+    "Do not invent register fields. If a register or field is missing from SVD, report uncertainty."
+  ]
+}

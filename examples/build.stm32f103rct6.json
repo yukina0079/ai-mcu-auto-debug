@@ -1,0 +1,43 @@
+{
+  "backend": "cmake",
+  "source_dir": ".",
+  "build_dir": "build/stm32f103rct6_blinky",
+  "configure_command": [
+    "cmake",
+    "-S",
+    "examples/firmware/stm32f103_blinky",
+    "-B",
+    "build/stm32f103rct6_blinky",
+    "-G",
+    "Ninja",
+    "-DCMAKE_TOOLCHAIN_FILE=examples/firmware/stm32f103_blinky/arm-gcc-toolchain.cmake",
+    "-DLINKER_SCRIPT=examples/firmware/stm32f103_blinky/linker.stm32f103rct6.ld"
+  ],
+  "build_command": [
+    "cmake",
+    "--build",
+    "build/stm32f103rct6_blinky"
+  ],
+  "flash_command": [
+    "openocd",
+    "-f",
+    "interface/cmsis-dap.cfg",
+    "-c",
+    "transport select swd",
+    "-f",
+    "target/stm32f1x.cfg",
+    "-c",
+    "adapter speed 100; program build/stm32f103rct6_blinky/firmware.elf verify reset exit"
+  ],
+  "smoke_test_command": [
+    "python",
+    "-m",
+    "ai_mcu_debug.cli",
+    "elf-check",
+    "--elf",
+    "build/stm32f103rct6_blinky/firmware.elf"
+  ],
+  "repair_command": null,
+  "repair_timeout_s": 600,
+  "max_repair_iterations": 3
+}
