@@ -1,0 +1,21 @@
+schema_version: 1
+id: stm32f103rct6_board
+chip: STM32F103RCT6
+family: STM32F1
+vendor: STMicroelectronics
+role: dut
+memory:
+  flash: 256 KiB
+  ram: 48 KiB
+artifacts:
+  context: examples/mcu_context.stm32f103rct6.json
+  build_config: examples/build.stm32f103rct6.json
+  debug_target: examples/debug.target.cmsis-dap.stm32f103rct6.json
+  debug_task: examples/debug_task.stm32f103rct6.json
+notes:
+  en:
+    - Use exact user-provided documents or a user-provided document repository for production-grade context.
+    - NRST may be absent on low-cost boards; record this in the debug target extra metadata.
+  zh:
+    - 生产级 context 应使用用户提供的精确资料或用户提供的资料仓库。
+    - 低成本开发板可能没有连接 NRST；应在 debug target 的 extra 元数据里记录。

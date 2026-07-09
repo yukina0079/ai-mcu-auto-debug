@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .agent_bootstrap import bootstrap_agent_environment
 from .audit import export_handoff
 from .audit_log import append_audit_event
 from .bootstrap import setup_project
@@ -48,6 +49,7 @@ from .runner import (
     FirstPhaseAcceptance,
     execute_debug_operation,
 )
+from .serial_log import collect_serial_log
 from .skill_bootstrap import bootstrap_skill_environment
 from .skill_install import install_skill
 from .target_validation import validate_debug_target
@@ -60,6 +62,7 @@ def main() -> int:
     _configure_utf8_stdout()
     parser = argparse.ArgumentParser(description="AI MCU debug automation")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    mcp_client_choices = ["codex", "generic-json", "claude-desktop", "claude-code", "opencode", "trae", "qoder"]
 
     doctor_parser = subparsers.add_parser("doctor")
     doctor_parser.add_argument("--debug-backend")
@@ -67,8 +70,18 @@ def main() -> int:
     subparsers.add_parser("probe-scan")
     subparsers.add_parser("mcp-server")
 
+    agent_bootstrap_parser = subparsers.add_parser("agent-bootstrap")
+    agent_bootstrap_parser.add_argument("--client", choices=mcp_client_choices, default="generic-json")
+    agent_bootstrap_parser.add_argument("--project", default=".")
+    agent_bootstrap_parser.add_argument("--python-executable")
+    agent_bootstrap_parser.add_argument("--server-name", default="ai_mcu_debug")
+    agent_bootstrap_parser.add_argument("--output")
+    agent_bootstrap_parser.add_argument("--timeout-s", type=float, default=10.0)
+    agent_bootstrap_parser.add_argument("--apply", action="store_true")
+    agent_bootstrap_parser.add_argument("--include-vision", action="store_true")
+
     mcp_config_parser = subparsers.add_parser("mcp-config")
-    mcp_config_parser.add_argument("--client", choices=["codex", "generic-json", "claude-desktop"], default="codex")
+    mcp_config_parser.add_argument("--client", choices=mcp_client_choices, default="codex")
     mcp_config_parser.add_argument("--project", default=".")
     mcp_config_parser.add_argument("--python-executable")
     mcp_config_parser.add_argument("--server-name", default="ai_mcu_debug")
@@ -87,7 +100,7 @@ def main() -> int:
     skill_bootstrap_parser.add_argument("--destination")
     skill_bootstrap_parser.add_argument("--codex-home")
     skill_bootstrap_parser.add_argument("--skill-name", default="mcu-auto-debug")
-    skill_bootstrap_parser.add_argument("--client", choices=["codex", "generic-json", "claude-desktop"], default="codex")
+    skill_bootstrap_parser.add_argument("--client", choices=mcp_client_choices, default="codex")
     skill_bootstrap_parser.add_argument("--python-executable")
     skill_bootstrap_parser.add_argument("--server-name", default="ai_mcu_debug")
     skill_bootstrap_parser.add_argument("--config-output")
@@ -408,6 +421,13 @@ def main() -> int:
     runtime_log_parser = subparsers.add_parser("runtime-log")
     runtime_log_parser.add_argument("--config", default="examples/build.cmake.json")
 
+    serial_log_parser = subparsers.add_parser("serial-log")
+    serial_log_parser.add_argument("--port", required=True)
+    serial_log_parser.add_argument("--baud", type=int, default=115200)
+    serial_log_parser.add_argument("--duration-s", type=float, default=5.0)
+    serial_log_parser.add_argument("--timeout-s", type=float, default=0.2)
+    serial_log_parser.add_argument("--output")
+
     loop_parser = subparsers.add_parser("closed-loop")
     loop_parser.add_argument("--build-config", default="examples/build.cmake.json")
     loop_parser.add_argument("--target")
@@ -513,6 +533,20 @@ def main() -> int:
         from .mcp_server import main as run_mcp_server
 
         return run_mcp_server()
+
+    if args.command == "agent-bootstrap":
+        report = bootstrap_agent_environment(
+            project_path=Path(args.project),
+            client=args.client,
+            python_executable=args.python_executable,
+            server_name=args.server_name,
+            output=Path(args.output) if args.output else None,
+            timeout_s=args.timeout_s,
+            dry_run=not args.apply,
+            include_vision=args.include_vision,
+        )
+        print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
+        return 0 if report.get("ok") else 1
 
     if args.command == "mcp-config":
         report = generate_mcp_config(
@@ -995,6 +1029,17 @@ def main() -> int:
         result = adapter.collect_runtime_log()
         _print_result(result)
         return 0 if result.ok else 1
+
+    if args.command == "serial-log":
+        report = collect_serial_log(
+            port=args.port,
+            baud=args.baud,
+            duration_s=args.duration_s,
+            timeout_s=args.timeout_s,
+            output=Path(args.output) if args.output else None,
+        )
+        print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
+        return 0 if report.get("ok") else 1
 
     if args.command == "closed-loop":
         build_config = load_build_config(Path(args.build_config))

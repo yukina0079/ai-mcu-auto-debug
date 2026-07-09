@@ -1,0 +1,30 @@
+schema_version: 1
+id: stm32f103_readonly_debug
+description: Safe non-flashing STM32F103 workflow for environment checks, context checks, build, smoke test, optional UART observation, and read-only debug evidence.
+description_zh: STM32F103 安全非烧录工作流：环境检查、context 检查、构建、smoke test、可选 UART 观测和只读调试证据。
+steps:
+  - name: environment_check
+    command: ai-mcu-debug doctor --debug-backend openocd-gdb
+    touches_hardware: false
+  - name: probe_scan
+    command: ai-mcu-debug probe-scan
+    touches_hardware: false
+  - name: context_check
+    command: ai-mcu-debug check-context --context examples/mcu_context.stm32f103rct6.json
+    touches_hardware: false
+  - name: build
+    command: ai-mcu-debug build --config examples/build.stm32f103rct6.json
+    touches_hardware: false
+  - name: smoke_test
+    command: ai-mcu-debug smoke-test --config examples/build.stm32f103rct6.json
+    touches_hardware: false
+  - name: uart_observation_optional
+    command: ai-mcu-debug serial-log --port <port> --baud 115200 --duration-s 5
+    touches_hardware: false
+    optional: true
+  - name: read_only_debug
+    command: ai-mcu-debug ai-debug --mode read-only --project . --context examples/mcu_context.stm32f103rct6.json --build-config examples/build.stm32f103rct6.json --target examples/debug.target.cmsis-dap.stm32f103rct6.json --task examples/debug_task.stm32f103rct6.json
+    touches_hardware: true
+    flash_allowed: false
+    repair_allowed: false
+    exclusive_hardware_session: true

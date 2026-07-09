@@ -1,0 +1,22 @@
+schema_version: 1
+id: uart_serial_optional
+role: runtime_observation
+type: uart_serial
+description: Optional UART/USB-serial observation instrument for runtime logs.
+description_zh: 用于运行日志观测的可选 UART/USB 串口 instrument。
+defaults:
+  baud: 115200
+  duration_s: 5
+  timeout_s: 0.2
+capabilities:
+  - serial_log_capture
+  - boot_banner_detection
+  - pass_fail_log_detection
+tools:
+  cli: ai-mcu-debug serial-log --port <port> --baud 115200 --duration-s 5
+  mcp_tool: collect_serial_log
+safety:
+  passive_observation: true
+  touches_target_state: false
+  flash_allowed: false
+  repair_allowed: false

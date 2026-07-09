@@ -5,6 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from ai_mcu_debug.agent_bootstrap import bootstrap_agent_environment
 from ai_mcu_debug.audit import export_handoff
 from ai_mcu_debug.bootstrap import setup_project as setup_mcu_project
 from ai_mcu_debug.capability_audit import audit_capabilities
@@ -34,6 +35,7 @@ from ai_mcu_debug.nonvision_acceptance import run_nonvision_acceptance
 from ai_mcu_debug.probe_scan import scan_debug_probes
 from ai_mcu_debug.replay import replay_handoff as replay_handoff_manifest
 from ai_mcu_debug.runner import AiDebugSession, BuildRepairSession, execute_debug_operation
+from ai_mcu_debug.serial_log import collect_serial_log as collect_serial_log_capture
 from ai_mcu_debug.skill_bootstrap import bootstrap_skill_environment
 from ai_mcu_debug.skill_install import install_skill
 from ai_mcu_debug.target_validation import validate_debug_target
@@ -251,6 +253,31 @@ def bootstrap_skill(
         skip_smoke=skip_smoke,
         include_vision=include_vision,
         timeout_s=timeout_s,
+    )
+
+
+def bootstrap_agent(
+    *,
+    project: str | Path = ".",
+    client: str = "generic-json",
+    python_executable: str | Path | None = None,
+    server_name: str = "ai_mcu_debug",
+    output: str | Path | None = None,
+    timeout_s: float = 10.0,
+    dry_run: bool = True,
+    include_vision: bool = False,
+) -> dict[str, Any]:
+    """Run portable non-hardware checks and MCP hints for any AI coding agent."""
+
+    return bootstrap_agent_environment(
+        project_path=Path(project),
+        client=client,
+        python_executable=python_executable,
+        server_name=server_name,
+        output=Path(output) if output else None,
+        timeout_s=timeout_s,
+        dry_run=dry_run,
+        include_vision=include_vision,
     )
 
 
@@ -611,6 +638,25 @@ def collect_runtime_log(*, config: str | Path) -> dict[str, Any]:
     build_config = load_build_config(Path(config))
     result = create_build_adapter(build_config).collect_runtime_log()
     return {"ok": result.ok, "status": "ok" if result.ok else "runtime_log_failed", "result": asdict(result)}
+
+
+def collect_serial_log(
+    *,
+    port: str,
+    baud: int = 115200,
+    duration_s: float = 5.0,
+    timeout_s: float = 0.2,
+    output: str | Path | None = None,
+) -> dict[str, Any]:
+    """Collect UART/USB-serial log evidence directly with pyserial."""
+
+    return collect_serial_log_capture(
+        port=port,
+        baud=baud,
+        duration_s=duration_s,
+        timeout_s=timeout_s,
+        output=Path(output) if output else None,
+    )
 
 
 def repair_build(

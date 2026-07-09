@@ -1,0 +1,21 @@
+schema_version: 1
+id: daplink_cmsis_dap
+role: debug_probe
+type: cmsis-dap
+interfaces:
+  - swd
+capabilities:
+  - reset_halt
+  - read_core_registers
+  - read_memory
+  - breakpoints
+  - single_step
+  - flash_when_explicitly_allowed
+tools:
+  preferred_backend: openocd-gdb
+  openocd_interface: interface/cmsis-dap.cfg
+  openocd_target: target/stm32f1x.cfg
+safety:
+  exclusive_access: true
+  parallel_sessions_allowed: false
+  default_adapter_speed_khz: 100

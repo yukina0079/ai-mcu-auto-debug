@@ -8,11 +8,13 @@ from typing import Any
 
 
 DEFAULT_REQUIRED_TOOLS = (
+    "agent_bootstrap",
     "workflow_plan",
     "workflow_run",
     "capability_audit",
     "mcp_config",
     "mcp_smoke",
+    "collect_serial_log",
     "run_ai_debug",
     "debug_op_guarded",
     "workspace_status",

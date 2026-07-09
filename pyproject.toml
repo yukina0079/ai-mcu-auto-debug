@@ -23,6 +23,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+serial = ["pyserial>=3.5"]
+
 [project.urls]
 Homepage = "https://github.com/yukina0079/ai-mcu-auto-debug"
 Repository = "https://github.com/yukina0079/ai-mcu-auto-debug"

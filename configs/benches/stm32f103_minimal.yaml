@@ -1,0 +1,29 @@
+schema_version: 1
+id: stm32f103_minimal
+name: STM32F103 minimal AI MCU automation bench
+name_zh: STM32F103 最小 AI MCU 自动化配置
+dut:
+  id: stm32f103rct6_board
+  chip: STM32F103RCT6
+  config: configs/boards/stm32f103rct6_daplink.yaml
+instruments:
+  debug_probe:
+    id: daplink_cmsis_dap
+    config: configs/instruments/daplink_cmsis_dap.yaml
+  uart:
+    id: uart_serial_optional
+    config: configs/instruments/uart_serial.yaml
+    required: false
+workflow:
+  default: configs/workflows/stm32f103_readonly_debug.yaml
+evidence:
+  context: examples/mcu_context.stm32f103rct6.json
+  build_config: examples/build.stm32f103rct6.json
+  debug_target: examples/debug.target.cmsis-dap.stm32f103rct6.json
+  debug_task: examples/debug_task.stm32f103rct6.json
+safety:
+  flash_allowed_by_default: false
+  repair_allowed_by_default: false
+  force_allowed_by_default: false
+  parallel_hardware_debug_allowed: false
+  vision_required: false

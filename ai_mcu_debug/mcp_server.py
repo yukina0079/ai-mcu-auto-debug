@@ -8,11 +8,13 @@ from typing import Any, Callable
 from ai_mcu_debug.api import (
     accept_nonvision,
     audit_project_capabilities,
+    bootstrap_agent,
     bootstrap_skill,
     build_firmware,
     check_prepared_context,
     check_environment,
     collect_runtime_log,
+    collect_serial_log,
     diagnose_connection,
     export_debug_handoff,
     fetch_user_documents,
@@ -191,6 +193,22 @@ DEBUG_OPERATION = _string(
     ],
 )
 SCHEMAS: dict[str, dict[str, Any]] = {
+    "agent_bootstrap": _object_schema(
+        {
+            "project": PROJECT_PATH,
+            "client": _string(
+                "Target AI client profile.",
+                default="generic-json",
+                enum=["codex", "generic-json", "claude-desktop", "claude-code", "opencode", "trae", "qoder"],
+            ),
+            "python_executable": _string("Python executable used to launch the MCP server. Defaults to the current interpreter."),
+            "server_name": _string("MCP server name in the client config.", default="ai_mcu_debug"),
+            "output": _string("Optional JSON bootstrap report output path."),
+            "timeout_s": _number("MCP smoke test timeout in seconds.", default=10.0),
+            "dry_run": _boolean("Report readiness without modifying global client config or touching hardware.", default=True),
+            "include_vision": _boolean("Treat postponed vision phase as a blocking audit requirement.", default=False),
+        }
+    ),
     "prepare_mcu_context": _object_schema(CONTEXT_PREP_PROPS),
     "plan_document_intake": _object_schema(
         {
@@ -227,7 +245,11 @@ SCHEMAS: dict[str, dict[str, Any]] = {
     "mcp_config": _object_schema(
         {
             "project": PROJECT_PATH,
-            "client": _string("Target AI client config format.", default="codex", enum=["codex", "generic-json", "claude-desktop"]),
+            "client": _string(
+                "Target AI client config format.",
+                default="codex",
+                enum=["codex", "generic-json", "claude-desktop", "claude-code", "opencode", "trae", "qoder"],
+            ),
             "python_executable": _string("Python executable used to launch the MCP server. Defaults to the current interpreter."),
             "server_name": _string("MCP server name in the client config.", default="ai_mcu_debug"),
             "output": _string("Optional path to write the generated config snippet."),
@@ -249,7 +271,11 @@ SCHEMAS: dict[str, dict[str, Any]] = {
             "destination": _string("Exact destination skill directory. Overrides codex_home when set."),
             "codex_home": _string("Codex home directory. Defaults to CODEX_HOME or ~/.codex."),
             "skill_name": _string("Skill directory name.", default="mcu-auto-debug"),
-            "client": _string("Target AI client config format.", default="codex", enum=["codex", "generic-json", "claude-desktop"]),
+            "client": _string(
+                "Target AI client config format.",
+                default="codex",
+                enum=["codex", "generic-json", "claude-desktop", "claude-code", "opencode", "trae", "qoder"],
+            ),
             "python_executable": _string("Python executable used to launch the MCP server. Defaults to the current interpreter."),
             "server_name": _string("MCP server name in the client config.", default="ai_mcu_debug"),
             "config_output": _string("Optional path to write the generated MCP config snippet."),
@@ -346,6 +372,16 @@ SCHEMAS: dict[str, dict[str, Any]] = {
     "build_firmware": _object_schema({"config": _string("Build config JSON path.")}, required=["config"]),
     "smoke_test_firmware": _object_schema({"config": _string("Build config JSON path.")}, required=["config"]),
     "collect_runtime_log": _object_schema({"config": _string("Build config JSON path.")}, required=["config"]),
+    "collect_serial_log": _object_schema(
+        {
+            "port": _string("Serial port path, for example COM3 or /dev/ttyACM0."),
+            "baud": _integer("Serial baud rate.", default=115200),
+            "duration_s": _number("Capture duration in seconds.", default=5.0),
+            "timeout_s": _number("Per-read timeout in seconds.", default=0.2),
+            "output": _string("Optional JSON serial log report output path."),
+        },
+        required=["port"],
+    ),
     "repair_build": _object_schema(
         {
             "config": _string("Build config JSON path."),
@@ -438,6 +474,10 @@ SCHEMAS: dict[str, dict[str, Any]] = {
 
 
 TOOLS: dict[str, dict[str, Any]] = {
+    "agent_bootstrap": {
+        "description": "Run non-hardware readiness checks and MCP/CLI handoff hints for Codex, Claude, OpenCode, Trae, Qoder, or a generic AI agent.",
+        "inputSchema": SCHEMAS["agent_bootstrap"],
+    },
     "prepare_mcu_context": {
         "description": "Prepare mcu_context.json from a project, chip, local files, and optional MCU document repositories.",
         "inputSchema": SCHEMAS["prepare_mcu_context"],
@@ -534,6 +574,10 @@ TOOLS: dict[str, dict[str, Any]] = {
         "description": "Collect UART/RTT/SWO/semihosting evidence through the configured runtime log command.",
         "inputSchema": SCHEMAS["collect_runtime_log"],
     },
+    "collect_serial_log": {
+        "description": "Collect UART/USB-serial evidence directly through pyserial when available.",
+        "inputSchema": SCHEMAS["collect_serial_log"],
+    },
     "repair_build": {
         "description": "Run the configured AI/code repair build loop only when allow_repair=true.",
         "inputSchema": SCHEMAS["repair_build"],
@@ -589,6 +633,7 @@ def main() -> int:
 class McpServer:
     def __init__(self) -> None:
         self._handlers: dict[str, Callable[[dict[str, Any]], Any]] = {
+            "agent_bootstrap": lambda args: bootstrap_agent(**args),
             "prepare_mcu_context": lambda args: prepare_context(**args),
             "plan_document_intake": lambda args: plan_docs(**args),
             "workflow_plan": lambda args: plan_next_workflow(**args),
@@ -613,6 +658,7 @@ class McpServer:
             "build_firmware": lambda args: build_firmware(**args),
             "smoke_test_firmware": lambda args: smoke_test_firmware(**args),
             "collect_runtime_log": lambda args: collect_runtime_log(**args),
+            "collect_serial_log": lambda args: collect_serial_log(**args),
             "repair_build": lambda args: repair_build(**args),
             "install_skill": lambda args: install_skill_package(**args),
             "mcu_profile": lambda args: get_mcu_profile(**args),

@@ -6,6 +6,7 @@
 python -m ai_mcu_debug.cli doctor
 python -m ai_mcu_debug.cli doctor --debug-backend openocd-gdb --build-backend cmake
 python -m ai_mcu_debug.cli doctor --debug-backend probe-rs-gdb --build-backend command
+python -m ai_mcu_debug.cli agent-bootstrap --project . --client generic-json
 python -m ai_mcu_debug.cli skill-bootstrap --project . --dry-run
 python -m ai_mcu_debug.cli install-skill --dry-run
 python -m ai_mcu_debug.cli install-skill
@@ -32,6 +33,7 @@ python scripts/first_stage_acceptance.py --report-dir debug_runs/first_stage_acc
 python -m ai_mcu_debug.cli build --config examples/build.cmake.json
 python -m ai_mcu_debug.cli smoke-test --config examples/build.cmake.json
 python -m ai_mcu_debug.cli runtime-log --config examples/build.cmake.json
+python -m ai_mcu_debug.cli serial-log --port <port> --baud 115200 --duration-s 5
 python -m ai_mcu_debug.cli repair-build --config examples/build.cmake.codex-repair.json
 python -m ai_mcu_debug.cli resolve-chip --project . --chip <chip>
 python -m ai_mcu_debug.cli doc-intake --project . --chip <chip>
@@ -197,7 +199,7 @@ The minimal stdio MCP server exposes only high-level safe tools:
 python -m ai_mcu_debug.cli mcp-server
 ```
 
-Tools currently exposed: `workflow_plan`, `workflow_run`, `capability_audit`, `mcp_config`, `mcp_smoke`, `doctor`, `probe_scan`, `init_workspace`, `validate_target`, `connection_diagnose`, `resolve_chip`, `locate_documents`, `fetch_user_documents`, `ingest_documents`, `sync_document_repo`, `check_mcu_context`, `write_debug_record`, `build_firmware`, `smoke_test_firmware`, `collect_runtime_log`, `repair_build`, `install_skill`, `setup_project`, `accept_nonvision`, `mcu_profile`, `lint_mcu_manifest`, `prepare_mcu_context`, `plan_document_intake`, `run_ai_debug`, `debug_op_guarded`, `read_hardware_id`, `export_handoff`, `replay_handoff`, and `workspace_status`. The server delegates to the same API/CLI logic, so `allow_flash`, `allow_repair`, and `force` remain opt-in. `repair_build` is blocked unless `allow_repair=true`; standalone flash remains intentionally outside MCP and should go through `run_ai_debug` with explicit `allow_flash`.
+Tools currently exposed: `agent_bootstrap`, `workflow_plan`, `workflow_run`, `capability_audit`, `mcp_config`, `mcp_smoke`, `doctor`, `probe_scan`, `init_workspace`, `validate_target`, `connection_diagnose`, `resolve_chip`, `locate_documents`, `fetch_user_documents`, `ingest_documents`, `sync_document_repo`, `check_mcu_context`, `write_debug_record`, `build_firmware`, `smoke_test_firmware`, `collect_runtime_log`, `collect_serial_log`, `repair_build`, `install_skill`, `setup_project`, `accept_nonvision`, `mcu_profile`, `lint_mcu_manifest`, `prepare_mcu_context`, `plan_document_intake`, `run_ai_debug`, `debug_op_guarded`, `read_hardware_id`, `export_handoff`, `replay_handoff`, and `workspace_status`. The server delegates to the same API/CLI logic, so `allow_flash`, `allow_repair`, and `force` remain opt-in. `repair_build` is blocked unless `allow_repair=true`; standalone flash remains intentionally outside MCP and should go through `run_ai_debug` with explicit `allow_flash`.
 
 `tools/list` publishes explicit JSON input schemas for every tool, including required fields, safe defaults, run-mode enums, debug operation enums, and policy-sensitive flags. `tools/call` validates incoming arguments against those schemas before dispatching, returning `status=invalid_arguments` for missing required fields, unexpected properties, type mismatches, or bad enum values. This keeps agent calls stable without moving safety policy out of the CLI/API layer.
 

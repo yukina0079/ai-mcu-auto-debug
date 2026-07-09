@@ -19,6 +19,7 @@ def test_capability_audit_reports_nonvision_ready(tmp_path: Path) -> None:
     assert {
         "realtime_debug",
         "build_test_repair_loop",
+        "signal_observation",
         "knowledge_guard",
         "user_document_intake",
         "safe_workflow_orchestration",

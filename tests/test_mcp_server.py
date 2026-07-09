@@ -12,6 +12,7 @@ def test_mcp_server_lists_core_tools() -> None:
 
     tool_names = {tool["name"] for tool in response["result"]["tools"]}
     assert {
+        "agent_bootstrap",
         "prepare_mcu_context",
         "plan_document_intake",
         "workflow_plan",
@@ -36,6 +37,7 @@ def test_mcp_server_lists_core_tools() -> None:
         "build_firmware",
         "smoke_test_firmware",
         "collect_runtime_log",
+        "collect_serial_log",
         "repair_build",
         "install_skill",
         "mcu_profile",
@@ -92,6 +94,7 @@ def test_mcp_server_schemas_match_public_api_parameters() -> None:
         "mcp_config": api.generate_mcp_client_config,
         "mcp_smoke": api.smoke_test_mcp_server,
         "skill_bootstrap": api.bootstrap_skill,
+        "agent_bootstrap": api.bootstrap_agent,
         "resolve_chip": api.resolve_mcu_chip,
         "locate_documents": api.locate_mcu_documents,
         "fetch_user_documents": api.fetch_user_documents,
@@ -108,6 +111,7 @@ def test_mcp_server_schemas_match_public_api_parameters() -> None:
         "build_firmware": api.build_firmware,
         "smoke_test_firmware": api.smoke_test_firmware,
         "collect_runtime_log": api.collect_runtime_log,
+        "collect_serial_log": api.collect_serial_log,
         "repair_build": api.repair_build,
         "install_skill": api.install_skill_package,
         "mcu_profile": api.get_mcu_profile,
@@ -246,6 +250,39 @@ def test_mcp_server_calls_skill_bootstrap_tool() -> None:
     assert response["result"]["isError"] is False
     payload = json.loads(response["result"]["content"][0]["text"])
     assert payload["status"] == "would_bootstrap"
+
+
+def test_mcp_server_calls_agent_bootstrap_tool() -> None:
+    response = McpServer().handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 14,
+            "method": "tools/call",
+            "params": {
+                "name": "agent_bootstrap",
+                "arguments": {"project": ".", "client": "qoder", "dry_run": True},
+            },
+        }
+    )
+
+    assert response["result"]["isError"] is False
+    payload = json.loads(response["result"]["content"][0]["text"])
+    assert payload["status"] == "would_bootstrap_agent"
+
+
+def test_mcp_server_validates_serial_log_required_port() -> None:
+    response = McpServer().handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 15,
+            "method": "tools/call",
+            "params": {"name": "collect_serial_log", "arguments": {}},
+        }
+    )
+
+    assert response["result"]["isError"] is True
+    payload = json.loads(response["result"]["content"][0]["text"])
+    assert payload["status"] == "invalid_arguments"
 
 
 def test_mcp_server_unknown_tool_returns_tool_error() -> None:

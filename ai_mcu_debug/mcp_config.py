@@ -6,7 +6,15 @@ from pathlib import Path
 from typing import Any
 
 
-SUPPORTED_CLIENTS = {"codex", "generic-json", "claude-desktop"}
+SUPPORTED_CLIENTS = {
+    "codex",
+    "generic-json",
+    "claude-desktop",
+    "claude-code",
+    "opencode",
+    "trae",
+    "qoder",
+}
 DEFAULT_SERVER_NAME = "ai_mcu_debug"
 
 
@@ -45,7 +53,7 @@ def generate_mcp_config(
     else:
         config = {"mcpServers": {server_name: server}}
         config_text = json.dumps(config, indent=2, ensure_ascii=False)
-        target_hint = "Merge this JSON object into the client's MCP configuration."
+        target_hint = _json_target_hint(client)
 
     report: dict[str, Any] = {
         "ok": ok,
@@ -109,6 +117,17 @@ def _codex_toml(server_name: str, server: dict[str, Any]) -> str:
         f"cwd = {_toml_string(str(server['cwd']))}",
     ]
     return "\n".join(lines)
+
+
+def _json_target_hint(client: str) -> str:
+    if client == "claude-desktop":
+        return "Merge this JSON object into Claude Desktop's MCP server configuration after reviewing it."
+    if client in {"claude-code", "opencode", "trae", "qoder"}:
+        return (
+            "Use this as a generic stdio MCP server definition for the selected AI coding client. "
+            "If that client does not expose an MCP config file, use the CLI flow from AGENT_QUICKSTART.md."
+        )
+    return "Merge this JSON object into the client's MCP configuration."
 
 
 def _toml_string(value: str) -> str:

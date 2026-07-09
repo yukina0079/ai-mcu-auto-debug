@@ -1,0 +1,22 @@
+schema_version: 1
+name: stm32f103_daplink_toolchain
+description: Minimal AI MCU automation bench for STM32F103RCT6 with DAPLink/CMSIS-DAP and optional UART.
+description_zh: 使用 DAPLink/CMSIS-DAP 和可选 UART 的 STM32F103RCT6 最小 AI MCU 自动化配置。
+orchestrator:
+  tool: ai-mcu-debug
+  mcp_server: ai-mcu-debug-mcp
+dut:
+  id: stm32f103rct6_board
+  config: configs/boards/stm32f103rct6_daplink.yaml
+instruments:
+  - id: daplink_cmsis_dap
+    config: configs/instruments/daplink_cmsis_dap.yaml
+  - id: uart_serial_optional
+    config: configs/instruments/uart_serial.yaml
+default_workflow: configs/workflows/stm32f103_readonly_debug.yaml
+safety:
+  flash_allowed_by_default: false
+  repair_allowed_by_default: false
+  force_allowed_by_default: false
+  parallel_hardware_debug_allowed: false
+  vision_required: false

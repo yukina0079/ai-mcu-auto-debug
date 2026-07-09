@@ -44,3 +44,13 @@ def test_generate_mcp_client_config_api() -> None:
 
     assert report["ok"] is True
     assert "mcpServers" in report["config"]
+
+
+def test_generate_generic_agent_client_configs() -> None:
+    for client in ["claude-code", "opencode", "trae", "qoder"]:
+        report = generate_mcp_config(project_path=ROOT, client=client, python_executable="python")
+
+        assert report["ok"] is True
+        assert report["client"] == client
+        assert report["config"]["mcpServers"]["ai_mcu_debug"]["args"] == ["-m", "ai_mcu_debug.cli", "mcp-server"]
+        assert "generic stdio MCP" in report["next_actions"][0]
