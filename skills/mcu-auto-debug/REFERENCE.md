@@ -68,6 +68,16 @@ python -m ai_mcu_debug.cli ai-debug --mode read-only
 
 `init-workspace` generates missing `.embeddedskills/build.json`, `.embeddedskills/debug.target.json`, and `.embeddedskills/debug_task.json` when it has enough local evidence. Provide explicit `--build-config`, `--target`, or `--task` only when the generated template is not appropriate.
 
+## Hardware Debug Concurrency
+
+Hardware debug access is exclusive per target board. Do not start parallel OpenOCD, pyOCD, J-Link, probe-rs, GDB, `debug-op`, `debug-sequence`, `hardware-id`, `connection-diagnose`, or `ai-debug` hardware sessions against the same board. These tools usually compete for the same USB probe, GDB server port, or target halt state; parallel reads can create false timeouts even when the board is healthy.
+
+When several registers or memory addresses must be sampled, prefer one of these patterns:
+
+- Put the reads in one `debug-sequence` so a single GDB connection performs them in order.
+- Use one `ai-debug --mode read-only` session with a task file that lists all required observations.
+- If using individual `debug-op` calls, run them sequentially and wait for each process to exit before starting the next one.
+
 For first-time onboarding, prefer `setup-project`. It runs `doctor`, optional `probe-scan`, document intake planning, context preparation when required documents are present, and `init-workspace` template generation in one deterministic report. If documents are missing, it stops at `status=awaiting_user_documents` with `document_intake.required_requests[]`.
 
 Use `mcu-profile` before onboarding a new chip family. It returns deterministic required document groups, recommended debug backends, a `vendors/<vendor>/<family>/<chip>/manifest.json` layout, and a manifest skeleton with placeholders for user-provided source URLs and hashes. Use `manifest-lint` to validate a user document repo manifest before running `prepare-mcu`.

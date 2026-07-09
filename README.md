@@ -1,8 +1,44 @@
 # AI MCU Auto Debug
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+
 AI MCU Auto Debug is a low-coupling automation layer for MCU bring-up and debugging. It stitches together existing embedded tools instead of replacing them: CMake/GCC or vendor build commands, OpenOCD/J-Link/pyOCD/probe-rs style debug servers, CMSIS-SVD and user-provided vendor documents, and a Codex skill or MCP client for orchestration.
 
 The public release focuses on the non-vision loop: prepare knowledge, build firmware, run safe debug actions, collect evidence, and iterate from reports. Camera/image-based board inspection is not shipped in this release.
+
+## 3-Minute Setup
+
+```powershell
+git clone https://github.com/yukina0079/ai-mcu-auto-debug.git
+cd ai-mcu-auto-debug
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+ai-mcu-debug doctor
+ai-mcu-debug capability-audit --project .
+ai-mcu-debug skill-bootstrap --project . --dry-run
+```
+
+Expected result:
+
+- `doctor` reports Python-side tools and any installed embedded backends.
+- `capability-audit` reports `status=nonvision_ready`.
+- `skill-bootstrap --dry-run` reports MCP server discovery without touching hardware.
+
+## Optional Embedded Tool Setup
+
+Install these only when you want real hardware debug on Windows:
+
+```powershell
+winget install xpack-dev-tools.openocd
+winget install Arm.GnuArmEmbeddedToolchain
+python -m pip install pyocd
+ai-mcu-debug doctor --debug-backend openocd-gdb
+ai-mcu-debug probe-scan
+```
+
+J-Link users can install SEGGER J-Link separately; Keil and PlatformIO flows are supported through command adapters when those tools are already installed.
 
 ## What Works
 
@@ -15,26 +51,22 @@ The public release focuses on the non-vision loop: prepare knowledge, build firm
 - Skill deployment: `skill-bootstrap` installs or previews the bundled Codex skill, generates MCP config snippets, runs an MCP smoke test, and performs capability audit in one report.
 - Handoff and replay: `export-handoff` packages replayable evidence; `replay-handoff` validates or safely executes non-hardware replay commands such as `workflow-run --no-hardware`.
 
-## Install
+## Verify The Project
+
+Run the test suite and environment checks:
 
 ```powershell
-git clone https://github.com/yukina0079/ai-mcu-auto-debug.git
-cd ai-mcu-auto-debug
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e .
 python -m pytest
+ai-mcu-debug doctor
+ai-mcu-debug mcp-smoke --project .
+ai-mcu-debug capability-audit --project .
 ```
 
-External embedded tools are optional until you need a matching backend. Typical Windows setup:
+For a quick install/deployment preview:
 
 ```powershell
-winget install xpack-dev-tools.openocd
-winget install Arm.GnuArmEmbeddedToolchain
-python -m pip install pyocd
+ai-mcu-debug skill-bootstrap --project . --dry-run
 ```
-
-J-Link users should install SEGGER J-Link separately and make sure the GDB server executable is available on `PATH`.
 
 ## Quick Start
 
@@ -86,6 +118,8 @@ ai-mcu-debug ai-debug --mode run --allow-flash --allow-repair --workspace-config
 
 Do not use `--allow-flash`, `--allow-repair`, or `--force` unless the current board and operation are intentionally selected.
 
+Hardware debug sessions are single-owner per board. Do not launch parallel OpenOCD/GDB/debug commands against the same target; batch reads in one `debug-sequence` or run individual commands sequentially.
+
 ## MCP Server
 
 Start the stdio server directly:
@@ -129,3 +163,7 @@ ai-mcu-debug replay-handoff --manifest debug_runs/handoff/handoff_manifest.json
 ## Repository Hygiene
 
 Generated build outputs, debug runs, local `.embeddedskills/` state, downloaded MCU documents, heavyweight official-context extracts, and local planning notes are intentionally ignored. Reusable MCU materials should live in user-provided document repositories or explicit local files.
+
+## License
+
+This project is open source under the [MIT License](LICENSE).

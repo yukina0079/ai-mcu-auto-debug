@@ -77,7 +77,7 @@ python -m ai_mcu_debug.cli analyze-debug-report --context examples/mcu_context.j
 7. Run `doctor` and `probe-scan`; generate local target config when possible. For connected read-only hardware checks, run `hardware-id` to read CPUID/vendor ID registers before trusting a guessed MCU identity.
 8. Build, smoke test, and collect runtime logs through the configured build adapter. Code repair requires explicit user intent through `--allow-repair` or MCP `repair_build` with `allow_repair=true`.
 9. Before any peripheral register read/write or memory write, use `mcu_context` guard commands.
-10. Run debug actions through `debug-op`, `debug-sequence`, `debug`, or `ai-debug`. When `.embeddedskills/config.json` exists, `ai-debug` may use its project/context/build/target/task defaults.
+10. Run debug actions through `debug-op`, `debug-sequence`, `debug`, or `ai-debug`. When `.embeddedskills/config.json` exists, `ai-debug` may use its project/context/build/target/task defaults. Treat hardware debug ports as exclusive: do not run OpenOCD, pyOCD, J-Link, probe-rs, GDB, `debug-op`, `debug-sequence`, `hardware-id`, `connection-diagnose`, or `ai-debug` hardware sessions in parallel against the same board. Batch multiple register or memory reads into one `debug-sequence` or one debug session instead of launching parallel tool calls.
 11. If DAPLink/CMSIS-DAP is visible but the target SWD-DP does not respond, run `connection-diagnose` or rely on `ai-debug` to attach a safe OpenOCD connection matrix report. Do not flash to solve a physical attach failure. If NRST is not connected, record `nrst_connected=false` and treat OpenOCD `nRESET=0` as an unobserved reset line rather than proof that the target is held low.
 12. Collect runtime logs through the configured build adapter when available, for example UART/RTT/SWO wrapper commands exposed as `runtime_log_command`.
 13. Analyze reports with `analyze-debug-report` and cite sources from `mcu_context`, reports, runtime logs, and user-provided document manifests.
@@ -111,6 +111,7 @@ If `locate-docs` reports `manifest_missing`, `chip_manifest_not_found`, `chip_al
 - Peripheral registers must be explained from `mcu_context` before relying on their meaning.
 - Register writes require field/access/reserved-bit validation.
 - Memory writes require `mcu_context` and must be limited to known RAM ranges or known memory-mapped registers. Unknown addresses are blocked as `unknown_or_unapproved_address`.
+- Hardware debug sessions are single-owner. Never parallelize hardware-touching debug commands against one target; parallel debug sessions can race for the GDB/OpenOCD port and produce false timeouts or failed reads.
 - Flash, option bytes, clock, reset, and debug-control writes require explicit approval or a documented force policy.
 - `ai-debug --mode run` must not flash unless `--allow-flash` is present for that specific run.
 - Never use `--force` by default. Use it only when the user explicitly approves a specific write operation and the report records why the guard was overridden.

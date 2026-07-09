@@ -2,12 +2,39 @@
 name = "ai-mcu-debug"
 version = "0.1.0"
 description = "Low-coupling AI assisted MCU debug automation framework"
+readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "AI MCU Auto Debug contributors" }
+]
+keywords = ["mcu", "embedded", "debug", "openocd", "gdb", "mcp", "codex", "automation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Embedded Systems",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/yukina0079/ai-mcu-auto-debug"
+Repository = "https://github.com/yukina0079/ai-mcu-auto-debug"
+Issues = "https://github.com/yukina0079/ai-mcu-auto-debug/issues"
 
 [project.scripts]
 ai-mcu-debug = "ai_mcu_debug.cli:main"
 ai-mcu-debug-mcp = "ai_mcu_debug.mcp_server:main"
+
+[tool.setuptools.packages.find]
+include = ["ai_mcu_debug*"]
+exclude = ["tests*", "skills*", "examples*", "docs*", "scripts*", "debug_runs*", "knowledge_cache*", "knowledge_repos*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
