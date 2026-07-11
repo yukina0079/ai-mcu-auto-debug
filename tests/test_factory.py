@@ -26,7 +26,7 @@ def test_cmake_build_backend_uses_cmake_adapter() -> None:
     assert isinstance(adapter, CMakeBuildAdapter)
 
 
-@pytest.mark.parametrize("backend", ["command", "keil", "platformio"])
+@pytest.mark.parametrize("backend", ["command", "keil", "platformio", "esp-idf"])
 def test_command_style_build_backends_use_command_adapter(backend: str) -> None:
     adapter = create_build_adapter(BuildConfig(backend=backend, build_command=["build"]))
 

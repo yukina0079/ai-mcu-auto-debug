@@ -6,6 +6,7 @@
 python -m ai_mcu_debug.cli doctor
 python -m ai_mcu_debug.cli doctor --debug-backend openocd-gdb --build-backend cmake
 python -m ai_mcu_debug.cli doctor --debug-backend probe-rs-gdb --build-backend command
+python -m ai_mcu_debug.cli doctor --debug-backend esp-idf-openocd-gdb --build-backend esp-idf
 python -m ai_mcu_debug.cli agent-bootstrap --project . --client generic-json
 python -m ai_mcu_debug.cli skill-bootstrap --project . --dry-run
 python -m ai_mcu_debug.cli install-skill --dry-run
@@ -272,6 +273,7 @@ python -m ai_mcu_debug.cli ingest-docs --manifest knowledge_cache/st/STM32F103RC
 | J-Link probe | J-Link GDB Server | Prefer when the installed SEGGER stack is available and the user wants SEGGER tooling. |
 | Rust/probe-rs supported chips | probe-rs | Good for modern Cortex-M chips and RTT-centric workflows. |
 | pyOCD-supported CMSIS-DAP chips | pyOCD GDB server | Good fallback for CMSIS-DAP diagnosis and DAPLink comparison. |
+| ESP32-C3 built-in USB Serial/JTAG | ESP-IDF + Espressif OpenOCD | Use `board/esp32c3-builtin.cfg`, `riscv32-esp-elf-gdb`, and exclusive access to VID 303A/PID 1001. |
 | CMake/GCC project | CMake adapter | Default for portable embedded GCC projects. |
 | Generic scripts | Command adapter | Use when the project already has build/flash/test/log wrapper scripts. |
 | Keil MDK project | Command adapter with Keil template | Use when `.uvprojx` is the source of truth; generated command calls `UV4.exe`. |

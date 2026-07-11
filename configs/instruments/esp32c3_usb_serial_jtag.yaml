@@ -1,0 +1,23 @@
+schema_version: 1
+id: esp32c3_usb_serial_jtag
+role: debug_probe_and_runtime_observation
+type: esp_usb_serial_jtag
+usb:
+  vid: "0x303A"
+  pid: "0x1001"
+capabilities:
+  - reset_halt
+  - read_riscv_registers
+  - read_memory
+  - hardware_breakpoints
+  - single_step
+  - serial_log_capture
+tools:
+  build_backend: esp-idf
+  debug_backend: esp-idf-openocd-gdb
+  openocd_board: board/esp32c3-builtin.cfg
+  gdb: riscv32-esp-elf-gdb
+safety:
+  exclusive_access: true
+  parallel_sessions_allowed: false
+  flash_allowed_by_default: false

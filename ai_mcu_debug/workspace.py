@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -210,8 +212,13 @@ def _generate_missing_templates(
     if not generate_templates:
         return {"build_config_path": build_config_path, "target_path": target_path, "task_path": task_path, "artifacts": artifacts}
 
-    build_dir = _default_build_dir(project_path, chip)
-    executable = executable_path or build_dir / "firmware.elf"
+    selected_build_backend = build_backend or _infer_build_backend(project_path)
+    if selected_build_backend == "esp-idf":
+        build_dir = Path("build")
+        executable = executable_path or (project_path / build_dir / f"{_esp_idf_project_name(project_path)}.elf").resolve()
+    else:
+        build_dir = _default_build_dir(project_path, chip)
+        executable = executable_path or build_dir / "firmware.elf"
     if build_config_path is None:
         build_config_path = output_dir / "build.json"
         if force or not build_config_path.exists():
@@ -223,11 +230,12 @@ def _generate_missing_templates(
                     executable,
                     context_path,
                     doctor_report,
-                    build_backend=build_backend,
+                    build_backend=selected_build_backend,
                     pio_env=pio_env,
                     keil_project=keil_project,
                     keil_target=keil_target,
                     uv4_path=uv4_path,
+                    probe_report=probe_report,
                 ),
             )
             artifacts.append({"kind": "build_config", "path": str(build_config_path), "generated": True})
@@ -235,14 +243,20 @@ def _generate_missing_templates(
     if task_path is None:
         task_path = output_dir / "debug_task.json"
         if force or not task_path.exists():
-            _write_json(task_path, _debug_task_template(context_path))
+            _write_json(task_path, _debug_task_template(context_path, chip))
             artifacts.append({"kind": "debug_task", "path": str(task_path), "generated": True})
 
-    backend = debug_backend or "openocd-gdb"
-    if target_path is None and backend in {"openocd-gdb", "pyocd-gdb", "jlink-gdb", "probe-rs-gdb"}:
+    backend = debug_backend or ("esp-idf-openocd-gdb" if _is_esp32c3(chip) else "openocd-gdb")
+    if target_path is None and backend in {"openocd-gdb", "esp-idf-openocd-gdb", "pyocd-gdb", "jlink-gdb", "probe-rs-gdb"}:
         target_path = output_dir / "debug.target.json"
         if force or not target_path.exists():
-            if backend == "pyocd-gdb":
+            if backend == "esp-idf-openocd-gdb":
+                target_template = _esp_idf_target_template(
+                    executable=executable,
+                    chip=chip,
+                    doctor_report=doctor_report,
+                )
+            elif backend == "pyocd-gdb":
                 target_template = _pyocd_target_template(
                     executable=executable,
                     chip=chip,
@@ -291,12 +305,15 @@ def _build_config_template(
     keil_project: Path | None = None,
     keil_target: str | None = None,
     uv4_path: Path | None = None,
+    probe_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     backend = build_backend or _infer_build_backend(project_path)
     if backend == "platformio":
         return _platformio_build_template(project_path, pio_env)
     if backend == "keil":
         return _keil_build_template(project_path, keil_project, keil_target, uv4_path)
+    if backend == "esp-idf":
+        return _esp_idf_build_template(project_path, build_dir, executable, doctor_report, probe_report)
     if backend == "command":
         return _command_build_template(project_path)
 
@@ -345,6 +362,78 @@ def _command_build_template(project_path: Path) -> dict[str, Any]:
         "max_repair_iterations": 3,
         "extra": {},
     }
+
+
+def _esp_idf_build_template(
+    project_path: Path,
+    build_dir: Path,
+    executable: Path,
+    doctor_report: dict[str, Any] | None,
+    probe_report: dict[str, Any] | None,
+) -> dict[str, Any]:
+    report = doctor_report or run_doctor(build_backend="esp-idf")
+    discovery = report.get("esp_idf", {})
+    activation_script = discovery.get("activation_script")
+    serial_port = _infer_esp_serial_port(probe_report)
+    build_command = _esp_idf_command(activation_script, ["idf.py", "-B", str(build_dir), "build"])
+    flash_args = ["idf.py", "-B", str(build_dir)]
+    if serial_port:
+        flash_args.extend(["-p", serial_port])
+    flash_args.append("flash")
+    return {
+        "backend": "esp-idf",
+        "source_dir": str(project_path),
+        "build_dir": str(build_dir),
+        "configure_command": None,
+        "build_command": build_command,
+        "flash_command": _esp_idf_command(activation_script, flash_args) if activation_script else None,
+        "smoke_test_command": [sys.executable, "-m", "ai_mcu_debug.cli", "elf-check", "--elf", str(executable)],
+        "runtime_log_command": (
+            [sys.executable, "-m", "ai_mcu_debug.cli", "serial-log", "--port", serial_port, "--baud", "115200", "--duration-s", "5"]
+            if serial_port
+            else None
+        ),
+        "repair_command": None,
+        "command_timeout_s": 1200,
+        "runtime_log_timeout_s": 10,
+        "repair_timeout_s": 600,
+        "max_repair_iterations": 3,
+        "extra": {
+            "framework": "esp-idf",
+            "target": "esp32c3",
+            "activation_script": activation_script,
+            "serial_port": serial_port,
+            "flash_configured": bool(serial_port and activation_script),
+        },
+    }
+
+
+def _esp_idf_command(activation_script: object, command: list[str]) -> list[str] | None:
+    if not activation_script:
+        return None
+    escaped_script = str(activation_script).replace("'", "''")
+    rendered = "& " + " ".join(_powershell_quote(item) for item in command)
+    return [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        f". '{escaped_script}'; {rendered}",
+    ]
+
+
+def _powershell_quote(value: str) -> str:
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _esp_idf_project_name(project_path: Path) -> str:
+    cmake = project_path / "CMakeLists.txt"
+    if cmake.exists():
+        match = re.search(r"\bproject\s*\(\s*([A-Za-z0-9_.-]+)", cmake.read_text(encoding="utf-8", errors="ignore"), re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return project_path.name or "firmware"
 
 
 def _platformio_build_template(project_path: Path, pio_env: str | None) -> dict[str, Any]:
@@ -422,15 +511,27 @@ def _linker_from_context(context_path: Path | None) -> str | None:
     return str(Path(linker).resolve()) if linker else None
 
 
-def _debug_task_template(context_path: Path | None) -> dict[str, Any]:
+def _debug_task_template(context_path: Path | None, chip: str | None = None) -> dict[str, Any]:
     memory_reads: list[dict[str, Any]] = []
     if context_path and context_path.exists():
         context = _read_json(context_path)
         ram = next((region for region in context.get("memory_regions", []) if region.get("name", "").upper() in {"RAM", "SRAM"}), None)
         if ram:
             memory_reads.append({"address": f"0x{int(ram['origin']):08X}", "length": 32})
-    if not memory_reads:
+    if not memory_reads and not _is_esp32c3(chip):
         memory_reads.append({"address": "0x20000000", "length": 32})
+    if _is_esp32c3(chip):
+        return {
+            "name": "esp32c3_readonly_debug",
+            "breakpoints": ["app_main"],
+            "registers": ["pc", "sp", "ra", "a0"],
+            "memory_reads": memory_reads,
+            "reset_before_run": True,
+            "launch_from_vector_table": None,
+            "step_count": 1,
+            "break_timeout_s": 10.0,
+            "record_path": "debug_runs/task_records.jsonl",
+        }
     return {
         "name": "first_phase_debug",
         "breakpoints": ["main"],
@@ -441,6 +542,42 @@ def _debug_task_template(context_path: Path | None) -> dict[str, Any]:
         "step_count": 1,
         "break_timeout_s": 10.0,
         "record_path": "debug_runs/task_records.jsonl",
+    }
+
+
+def _esp_idf_target_template(
+    executable: Path,
+    chip: str | None,
+    doctor_report: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    board_cfg = _infer_esp_openocd_board(chip)
+    if not board_cfg:
+        return None
+    report = doctor_report or run_doctor(debug_backend="esp-idf-openocd-gdb")
+    discovery = report.get("esp_idf", {})
+    gdb = discovery.get("riscv_gdb")
+    openocd = discovery.get("openocd")
+    scripts = discovery.get("openocd_scripts")
+    if not all(value and Path(str(value)).exists() for value in (gdb, openocd, scripts)):
+        return None
+    return {
+        "backend": "openocd-gdb",
+        "executable": str(executable),
+        "gdb_path": str(gdb),
+        "remote": "localhost:3333",
+        "cwd": ".",
+        "log_path": "debug_runs/debug_commands.jsonl",
+        "server_command": [str(openocd), "-s", str(scripts), "-f", board_cfg],
+        "server_startup_delay_s": 2.0,
+        "connect_retries": 5,
+        "connect_retry_delay_s": 1.0,
+        "recover_on_disconnect": True,
+        "command_retries": 2,
+        "extra": {
+            "toolchain": "esp-idf",
+            "board_cfg": board_cfg,
+            "exclusive_usb_serial_jtag": True,
+        },
     }
 
 
@@ -634,6 +771,29 @@ def _infer_openocd_target_cfg(chip: str | None) -> str | None:
     return None
 
 
+def _infer_esp_openocd_board(chip: str | None) -> str | None:
+    return "board/esp32c3-builtin.cfg" if _is_esp32c3(chip) else None
+
+
+def _is_esp32c3(chip: str | None) -> bool:
+    normalized = "".join(character for character in str(chip or "").upper() if character.isalnum())
+    return normalized.startswith("ESP32C3")
+
+
+def _infer_esp_serial_port(probe_report: dict[str, Any] | None) -> str | None:
+    if not probe_report:
+        return None
+    for probe in probe_report.get("probes", []):
+        text = json.dumps(probe, ensure_ascii=False).lower()
+        if "vid_303a&pid_1001" not in text and "espressif usb serial/jtag" not in text:
+            continue
+        friendly_name = str(probe.get("friendly_name") or "")
+        match = re.search(r"\b(COM\d+)\b", friendly_name, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+    return None
+
+
 def _infer_pyocd_target(chip: str | None) -> str | None:
     if not chip:
         return None
@@ -646,6 +806,9 @@ def _infer_pyocd_target(chip: str | None) -> str | None:
 
 
 def _infer_build_backend(project_path: Path) -> str:
+    cmake = project_path / "CMakeLists.txt"
+    if cmake.exists() and "IDF_PATH" in cmake.read_text(encoding="utf-8", errors="ignore"):
+        return "esp-idf"
     if (project_path / "CMakeLists.txt").exists():
         return "cmake"
     if (project_path / "platformio.ini").exists():

@@ -1,0 +1,26 @@
+schema_version: 1
+id: esp32c3_supermini
+chip: ESP32C3
+family: ESP32-C3
+vendor: Espressif
+role: dut
+memory:
+  embedded_flash: 4 MiB
+interfaces:
+  usb:
+    vid: "0x303A"
+    pid: "0x1001"
+    serial_interface: MI_00
+    jtag_interface: MI_02
+artifacts:
+  firmware_project: examples/firmware/esp32c3_supermini_smoke
+  debug_task: examples/debug_task.esp32c3-supermini.json
+notes:
+  en:
+    - The verified board uses the ESP32-C3 built-in USB Serial/JTAG controller.
+    - Windows OpenOCD requires the MI_02 interface to use the Espressif/libwdi WinUSB driver.
+    - Exact board GPIO mappings vary across SuperMini clones; request board documentation before controlling an LED or attached circuit.
+  zh:
+    - 已验证板卡使用 ESP32-C3 内置 USB Serial/JTAG 控制器。
+    - Windows 上使用 OpenOCD 时，MI_02 接口需要绑定 Espressif/libwdi WinUSB 驱动。
+    - 不同 SuperMini 克隆板的 GPIO 映射可能不同；控制 LED 或外接电路前应向用户索要板卡资料。

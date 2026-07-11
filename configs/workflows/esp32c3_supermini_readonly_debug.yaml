@@ -1,0 +1,27 @@
+schema_version: 1
+id: esp32c3_supermini_readonly_debug
+description: Safe ESP32-C3 SuperMini workflow using ESP-IDF, built-in USB Serial/JTAG, UART observation, and read-only debug evidence.
+description_zh: 使用 ESP-IDF、内置 USB Serial/JTAG、串口观测和只读调试证据的 ESP32-C3 SuperMini 安全工作流。
+steps:
+  - name: environment_check
+    command: ai-mcu-debug doctor --debug-backend esp-idf-openocd-gdb --build-backend esp-idf
+    touches_hardware: false
+  - name: probe_scan
+    command: ai-mcu-debug probe-scan
+    touches_hardware: false
+  - name: document_intake
+    command: ai-mcu-debug doc-intake --project examples/firmware/esp32c3_supermini_smoke --chip ESP32C3
+    touches_hardware: false
+  - name: build
+    command: ai-mcu-debug build --config .embeddedskills-esp32c3/build.json
+    touches_hardware: false
+  - name: serial_observation
+    command: ai-mcu-debug serial-log --port COM13 --baud 115200 --duration-s 5
+    touches_hardware: false
+    optional: true
+  - name: read_only_debug
+    command: ai-mcu-debug ai-debug --mode read-only --workspace-config .embeddedskills-esp32c3/config.json
+    touches_hardware: true
+    flash_allowed: false
+    repair_allowed: false
+    exclusive_hardware_session: true

@@ -11,6 +11,7 @@ This page separates verified evidence from candidate support. A board is marked 
 | Board / DUT | Status | Debug Instrument | UART Observation | Notes |
 |---|---|---|---|---|
 | STM32F103RCT6 generic board | candidate | DAPLink/CMSIS-DAP through OpenOCD | optional | Primary development target and example configs are included. |
+| ESP32-C3 SuperMini | verified debug link | Built-in USB Serial/JTAG through Espressif OpenOCD | COM13 / 115200 on verified bench | Chip identity, 4 MB Flash, RISC-V registers, memory read, hardware breakpoint, single-step, resume, and serial log verified. |
 
 ## Verification Requirements / 验证要求
 

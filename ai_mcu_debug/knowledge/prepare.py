@@ -170,6 +170,18 @@ def locate_docs(
                         }
                     )
                 continue
+            if chip and _path_conflicts_with_chip(path, chip):
+                diagnostics.append(
+                    {
+                        "code": "document_chip_mismatch_skipped",
+                        "severity": "info",
+                        "blocks": False,
+                        "path": str(path),
+                        "chip": chip,
+                        "reason": "loose_document_mentions_a_different_chip_family",
+                    }
+                )
+                continue
             kind = _classify_path(path, chip)
             if kind:
                 entries.append(_manifest_entry(kind, path, trust_level=trust_level))
@@ -849,8 +861,27 @@ def _selection_priority(entry: dict[str, Any], chip: str | None) -> tuple[int, i
 
 
 def _chip_candidates_from_text(text: str) -> list[str]:
-    candidates = re.findall(r"stm32[a-z]?\d{3}[a-z0-9]{0,6}", text, flags=re.IGNORECASE)
+    patterns = (
+        r"stm32[a-z]?\d{3}[a-z0-9]{0,6}",
+        r"esp32[-_ ]?c3(?:[-_ ]?supermini)?",
+        r"nrf52\d{0,3}",
+        r"rp2040",
+        r"gd32f1\d{0,3}[a-z0-9]{0,6}",
+    )
+    candidates: list[str] = []
+    for pattern in patterns:
+        candidates.extend(re.findall(pattern, text, flags=re.IGNORECASE))
     return [_normalize_chip(candidate) for candidate in candidates]
+
+
+def _path_conflicts_with_chip(path: Path, chip: str) -> bool:
+    candidates = _chip_candidates_from_text(path.name)
+    candidates.extend(_chip_candidates_from_file(path))
+    if not candidates:
+        return False
+    requested_family = _chip_family(chip)
+    candidate_families = {_chip_family(candidate) for candidate in candidates}
+    return requested_family not in candidate_families
 
 
 def _add_candidates_from_path(
@@ -942,8 +973,14 @@ def _normalize_chip(value: str) -> str:
 def _chip_family(chip: str | None) -> str | None:
     if not chip:
         return None
-    match = re.match(r"(STM32[A-Z]?\d{3})", chip.upper())
-    return match.group(1) if match else chip.upper()
+    normalized = _normalize_chip(chip)
+    match = re.match(r"(STM32[A-Z]?\d{3})", normalized)
+    if match:
+        return match.group(1)
+    for prefix in ("ESP32C3", "NRF52", "RP2040", "GD32F1"):
+        if normalized.startswith(prefix):
+            return prefix
+    return normalized
 
 
 def _add_candidate(candidates: dict[str, dict[str, Any]], chip: str, score: int, source: str, evidence: dict[str, Any]) -> None:

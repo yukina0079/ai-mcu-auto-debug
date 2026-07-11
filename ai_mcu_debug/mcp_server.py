@@ -129,11 +129,11 @@ CONTEXT_PREP_PROPS = {
 }
 BUILD_BACKEND = _string(
     "Build backend template to generate.",
-    enum=["cmake", "command", "platformio", "keil"],
+    enum=["cmake", "command", "platformio", "keil", "esp-idf"],
 )
 DEBUG_BACKEND = _string(
     "Debug backend template to generate.",
-    enum=["openocd-gdb", "pyocd-gdb", "jlink-gdb", "probe-rs-gdb"],
+    enum=["openocd-gdb", "pyocd-gdb", "jlink-gdb", "probe-rs-gdb", "esp-idf-openocd-gdb"],
 )
 WORKSPACE_SETUP_PROPS = {
     **COMMON_EVIDENCE_PROPS,

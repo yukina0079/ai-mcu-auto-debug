@@ -45,6 +45,17 @@ python -m ai_mcu_debug.cli install-skill --force
 9. Run `ai-debug --mode dry-run` before `ai-debug --mode read-only`.
 10. Export evidence with `export-handoff` when another AI or engineer needs to replay the work.
 
+## ESP32-C3 / ESP-IDF
+
+When the target is ESP32-C3 or an ESP32-C3 SuperMini:
+
+1. Use `doctor --debug-backend esp-idf-openocd-gdb --build-backend esp-idf`; the tool discovers EIM/VS Code installations from `eim_idf.json` and does not require global PATH changes.
+2. Use the ESP-IDF activation script, Espressif OpenOCD, `board/esp32c3-builtin.cfg`, and `riscv32-esp-elf-gdb`. Do not use generic xPack OpenOCD for the built-in USB Serial/JTAG interface.
+3. Treat `VID_303A&PID_1001` as one exclusive instrument. Do not run serial logging, esptool, OpenOCD, or GDB against it in parallel.
+4. On Windows, the JTAG `MI_02` interface must use the Espressif/libwdi WinUSB driver. `LIBUSB_ERROR_NOT_FOUND` means the driver package or binding is not ready.
+5. Use RISC-V registers such as `pc`, `sp`, `ra`, and `a0`; do not request Cortex-M-only `lr`, `xpsr`, or vector-table launch behavior.
+6. Keep ESP32-C3 knowledge separate from STM32 examples. If intake finds another chip family, stop and ask for ESP32-C3 SVD/TRM/linker evidence instead of generating context.
+
 ## Safety Gates
 
 - Hardware debug sessions are single-owner per board. Do not run OpenOCD, GDB, pyOCD, J-Link, probe-rs, `debug-op`, `debug-sequence`, `hardware-id`, `connection-diagnose`, or `ai-debug` in parallel against the same target.
@@ -67,6 +78,8 @@ python -m ai_mcu_debug.cli serial-log --port <port> --baud 115200 --duration-s 5
 python -m ai_mcu_debug.cli ai-debug --mode dry-run --workspace-config .embeddedskills/config.json
 python -m ai_mcu_debug.cli ai-debug --mode read-only --workspace-config .embeddedskills/config.json
 python -m ai_mcu_debug.cli export-handoff --output debug_runs/handoff.zip --zip
+python -m ai_mcu_debug.cli doctor --debug-backend esp-idf-openocd-gdb --build-backend esp-idf
+python -m ai_mcu_debug.cli init-workspace --output-dir .embeddedskills-esp32c3 --project examples/firmware/esp32c3_supermini_smoke --chip ESP32C3 --build-backend esp-idf --debug-backend esp-idf-openocd-gdb
 ```
 
 ## MCP Surface

@@ -8,6 +8,8 @@ __pycache__/
 
 # Build and generated firmware artifacts
 /build/
+examples/firmware/**/build/
+examples/firmware/**/sdkconfig
 *.elf
 *.bin
 *.hex
@@ -18,6 +20,7 @@ __pycache__/
 # Runtime reports and local workspace state
 debug_runs/
 .embeddedskills/
+.embeddedskills-*/
 .private/
 
 # Downloaded MCU documents and generated heavyweight knowledge artifacts

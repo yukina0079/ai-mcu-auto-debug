@@ -1,0 +1,22 @@
+schema_version: 1
+id: esp32c3_supermini
+name: ESP32-C3 SuperMini AI MCU automation bench
+name_zh: ESP32-C3 SuperMini AI MCU 自动化配置
+dut:
+  id: esp32c3_supermini
+  config: configs/boards/esp32c3_supermini.yaml
+instruments:
+  usb_serial_jtag:
+    id: esp32c3_usb_serial_jtag
+    config: configs/instruments/esp32c3_usb_serial_jtag.yaml
+workflow:
+  default: configs/workflows/esp32c3_supermini_readonly_debug.yaml
+evidence:
+  firmware_project: examples/firmware/esp32c3_supermini_smoke
+  debug_task: examples/debug_task.esp32c3-supermini.json
+safety:
+  flash_allowed_by_default: false
+  repair_allowed_by_default: false
+  force_allowed_by_default: false
+  parallel_hardware_debug_allowed: false
+  vision_required: false

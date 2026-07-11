@@ -89,14 +89,15 @@ class GdbRemoteAdapter(DebugAdapter):
         self._drain_until_prompt()
 
     def close(self) -> None:
-        self._stop_gdb(graceful=True)
+        # A resumed target may never produce a prompt for -gdb-exit. Process
+        # termination is bounded and still detaches cleanly from the target.
+        self._stop_gdb(graceful=False)
         if self.server_process:
-            self.server_process.terminate()
-            try:
-                self.server_process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                self.server_process.kill()
+            self._terminate_process(self.server_process)
             self.server_process = None
+        if self._server_output_thread:
+            self._server_output_thread.join(timeout=1)
+            self._server_output_thread = None
 
     def _stop_gdb(self, graceful: bool) -> None:
         if not self.process:
@@ -107,9 +108,22 @@ class GdbRemoteAdapter(DebugAdapter):
         except Exception:
             pass
         finally:
-            if self.process and self.process.poll() is None:
-                self.process.kill()
+            if self.process:
+                self._terminate_process(self.process)
             self.process = None
+
+    @staticmethod
+    def _terminate_process(process: subprocess.Popen[str]) -> None:
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=3)
+        for stream in (process.stdin, process.stdout, process.stderr):
+            if stream is not None:
+                stream.close()
 
     def diagnostics(self) -> dict[str, object]:
         return {

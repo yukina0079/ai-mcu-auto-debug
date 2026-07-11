@@ -48,6 +48,24 @@ PROFILE_RULES: list[dict[str, Any]] = [
         "notes": ["Record exact flash/RAM density in the linker entry; STM32F4 parts vary widely by suffix."],
     },
     {
+        "id": "esp32c3",
+        "vendor": "espressif",
+        "family": "esp32c3",
+        "match_prefixes": ["ESP32C3"],
+        "required_groups": [
+            {"name": "register_map", "any_of": ["svd"]},
+            {"name": "memory_map", "any_of": ["linker"]},
+            {"name": "datasheet_or_reference", "any_of": ["datasheet", *sorted(REFERENCE_KIND_ALIASES)]},
+        ],
+        "optional_kinds": ["errata", "startup", "board"],
+        "recommended_debug_backends": ["esp-idf-openocd-gdb"],
+        "notes": [
+            "Prefer the selected ESP-IDF installation for build tools, RISC-V GDB, and Espressif OpenOCD.",
+            "ESP32-C3 USB Serial/JTAG uses VID 0x303A and PID 0x1001 on supported boards.",
+            "Do not reuse Cortex-M register names, vector-table assumptions, or STM32 documents.",
+        ],
+    },
+    {
         "id": "nrf52",
         "vendor": "nordic",
         "family": "nrf52",

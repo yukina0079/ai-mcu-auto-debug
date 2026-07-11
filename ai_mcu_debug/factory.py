@@ -16,7 +16,7 @@ def create_debug_adapter(config: DebugTargetConfig) -> DebugAdapter:
 def create_build_adapter(config: BuildConfig) -> BuildAdapter:
     if config.backend == "cmake":
         return CMakeBuildAdapter(config)
-    if config.backend in {"command", "keil", "platformio"}:
+    if config.backend in {"command", "keil", "platformio", "esp-idf"}:
         return CommandBuildAdapter(config)
     raise ValueError(f"Unsupported build backend: {config.backend}")
 

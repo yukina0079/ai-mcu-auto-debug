@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import platform
+import re
 import subprocess
 from typing import Any
 
@@ -17,6 +18,7 @@ KNOWN_PROBE_KEYWORDS = (
     "ulink",
     "black magic",
     "debug probe",
+    "usb jtag/serial debug unit",
 )
 
 KNOWN_PROBE_USB_IDS = {
@@ -28,6 +30,7 @@ KNOWN_PROBE_USB_IDS = {
     "vid_0483&pid_374b": "ST-Link debug probe",
     "vid_0483&pid_374e": "ST-Link debug probe",
     "vid_1366": "J-Link debug probe",
+    "vid_303a&pid_1001": "Espressif USB Serial/JTAG",
 }
 
 
@@ -82,7 +85,7 @@ def _scan_windows_pnp_devices() -> list[dict[str, Any]]:
 def _classify_device(device: dict[str, Any]) -> dict[str, Any]:
     text = " ".join(str(device.get(key, "")) for key in ("FriendlyName", "InstanceId", "Class"))
     lower = text.lower()
-    matched_keywords = [keyword for keyword in KNOWN_PROBE_KEYWORDS if keyword in lower]
+    matched_keywords = [keyword for keyword in KNOWN_PROBE_KEYWORDS if _contains_keyword(lower, keyword)]
     matched_usb_ids = [label for usb_id, label in KNOWN_PROBE_USB_IDS.items() if usb_id in lower]
     return {
         "matched": bool(matched_keywords or matched_usb_ids),
@@ -93,6 +96,12 @@ def _classify_device(device: dict[str, Any]) -> dict[str, Any]:
         "class": device.get("Class"),
         "status": device.get("Status"),
     }
+
+
+def _contains_keyword(text: str, keyword: str) -> bool:
+    """Match probe names without treating `mbed` as part of `embedded`."""
+    pattern = rf"(?<![a-z0-9]){re.escape(keyword)}(?![a-z0-9])"
+    return re.search(pattern, text) is not None
 
 
 def _recommendations(probes: list[dict[str, Any]]) -> list[str]:

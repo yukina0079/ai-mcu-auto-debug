@@ -260,3 +260,66 @@ def test_init_workspace_can_generate_keil_build_template(tmp_path: Path) -> None
     assert "app.uvprojx" in build
     assert "Target 1" in build
     assert report["ok"] is True
+
+
+def test_init_workspace_generates_esp_idf_supermini_templates(tmp_path: Path) -> None:
+    project = tmp_path / "esp32c3_supermini_smoke"
+    project.mkdir()
+    (project / "CMakeLists.txt").write_text(
+        "include($ENV{IDF_PATH}/tools/cmake/project.cmake)\nproject(supermini_smoke)\n",
+        encoding="utf-8",
+    )
+    tools = tmp_path / "tools"
+    activation = tools / "PowerShell_profile.ps1"
+    gdb = tools / "riscv32-esp-elf-gdb.exe"
+    openocd = tools / "openocd.exe"
+    scripts = tools / "openocd-scripts"
+    for path in (activation, gdb, openocd):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("", encoding="utf-8")
+    scripts.mkdir()
+    doctor_report = {
+        "esp_idf": {
+            "ok": True,
+            "activation_script": str(activation),
+            "riscv_gdb": str(gdb),
+            "openocd": str(openocd),
+            "openocd_scripts": str(scripts),
+        },
+        "checks": [],
+    }
+    probe_report = {
+        "probes": [
+            {
+                "matched_usb_ids": ["Espressif USB Serial/JTAG"],
+                "friendly_name": "USB Serial Device (COM13)",
+                "instance_id": "USB\\VID_303A&PID_1001&MI_00\\TEST",
+            }
+        ]
+    }
+    config_dir = tmp_path / ".embeddedskills"
+
+    report = init_workspace_config(
+        output_dir=config_dir,
+        project_path=project,
+        chip="ESP32C3",
+        build_backend="esp-idf",
+        debug_backend="esp-idf-openocd-gdb",
+        doctor_report=doctor_report,
+        probe_report=probe_report,
+        force=True,
+    )
+
+    build = (config_dir / "build.json").read_text(encoding="utf-8")
+    target = (config_dir / "debug.target.json").read_text(encoding="utf-8")
+    task = (config_dir / "debug_task.json").read_text(encoding="utf-8")
+    assert report["ok"] is True
+    assert '"backend": "esp-idf"' in build
+    assert "PowerShell_profile.ps1" in build
+    assert "COM13" in build
+    assert "supermini_smoke.elf" in target
+    assert "board/esp32c3-builtin.cfg" in target
+    assert "riscv32-esp-elf-gdb.exe" in target
+    assert '"registers": [' in task
+    assert '"ra"' in task
+    assert '"launch_from_vector_table": null' in task

@@ -109,7 +109,14 @@ configs/boards/stm32f103rct6_daplink.yaml
 configs/instruments/daplink_cmsis_dap.yaml
 configs/instruments/uart_serial.yaml
 configs/workflows/stm32f103_readonly_debug.yaml
+configs/benches/esp32c3_supermini.yaml
+configs/instruments/esp32c3_usb_serial_jtag.yaml
+configs/workflows/esp32c3_supermini_readonly_debug.yaml
 ```
+
+ESP32-C3 SuperMini is supported through an optional ESP-IDF backend. `doctor` discovers ESP-IDF installations managed by EIM or the VS Code extension, including Espressif OpenOCD and RISC-V GDB, without requiring them on the global `PATH`.
+
+ESP32-C3 SuperMini 通过可选 ESP-IDF backend 接入。`doctor` 可以发现由 EIM 或 VS Code 扩展管理的 ESP-IDF、Espressif OpenOCD 和 RISC-V GDB，不要求把它们加入全局 `PATH`。
 
 ## Hardware Workflow / 硬件流程
 

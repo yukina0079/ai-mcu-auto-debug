@@ -11,6 +11,7 @@ Golden suite 是可复现的工作流，用证据证明板卡/工具链路径，
 | Suite | Status | DUT | Instruments | Evidence |
 |---|---|---|---|---|
 | `stm32f103_readonly_debug` | candidate | STM32F103RCT6 | DAPLink/CMSIS-DAP, optional UART | Context check, build, smoke test, read-only debug report |
+| `esp32c3_supermini_readonly_debug` | verified debug link | ESP32-C3 SuperMini | Built-in USB Serial/JTAG | ESP-IDF environment, chip/Flash identity, registers, memory, hardware breakpoint, single-step, serial log |
 
 `candidate` means the suite exists and can be run, but public verification depends on the current maintainer bench and report artifacts.
 

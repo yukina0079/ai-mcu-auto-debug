@@ -33,3 +33,31 @@ def test_recommendations_when_no_probe_found() -> None:
     recommendations = _recommendations([])
 
     assert recommendations[0] == "No known debug probe detected in present USB/PnP devices."
+
+
+def test_classify_espressif_usb_serial_jtag() -> None:
+    result = _classify_device(
+        {
+            "FriendlyName": "USB Serial Device (COM13)",
+            "InstanceId": "USB\\VID_303A&PID_1001&MI_00\\TEST",
+            "Class": "Ports",
+            "Status": "OK",
+        }
+    )
+
+    assert result["matched"] is True
+    assert result["matched_usb_ids"] == ["Espressif USB Serial/JTAG"]
+
+
+def test_embedded_controller_is_not_mistaken_for_mbed_probe() -> None:
+    result = _classify_device(
+        {
+            "FriendlyName": "Microsoft ACPI-Compliant Embedded Controller",
+            "InstanceId": "ACPI\\PNP0C09\\4&TEST",
+            "Class": "System",
+            "Status": "OK",
+        }
+    )
+
+    assert result["matched"] is False
+    assert result["matched_keywords"] == []

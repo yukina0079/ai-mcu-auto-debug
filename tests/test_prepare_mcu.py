@@ -141,6 +141,41 @@ def test_locate_docs_recognizes_flash_ld_linker_name(tmp_path: Path) -> None:
     assert "STM32F103RCTx_FLASH.ld" in linker_paths
 
 
+def test_locate_docs_excludes_other_chip_family_materials(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    project = tmp_path / "mixed_project"
+    docs = project / "docs"
+    docs.mkdir(parents=True)
+    (docs / "stm32f103_datasheet.md").write_text("STM32F103 datasheet", encoding="utf-8")
+    (project / "STM32F103_min.svd").write_text("<device><name>STM32F103</name></device>", encoding="utf-8")
+    (project / "linker.stm32f103.ld").write_text("MEMORY {}", encoding="utf-8")
+    (project / "startup_stm32f103.c").write_text("void Reset_Handler(void) {}", encoding="utf-8")
+
+    report = locate_docs(project, chip="ESP32C3")
+
+    assert report["ok"] is False
+    assert not any("stm32" in str(item["local_path"]).lower() for item in report["documents"])
+    assert {item["kind"] for item in report["missing"]} >= {"svd", "linker", "datasheet_or_reference"}
+    assert any(item["code"] == "document_chip_mismatch_skipped" for item in report["diagnostics"])
+
+
+def test_esp32c3_document_intake_does_not_reuse_stm32_examples(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    project = tmp_path / "project"
+    project.mkdir()
+    examples = tmp_path / "examples"
+    (examples / "svd").mkdir(parents=True)
+    (examples / "docs").mkdir(parents=True)
+    (examples / "svd" / "STM32F103_min.svd").write_text("<device/>", encoding="utf-8")
+    (examples / "docs" / "stm32f103_datasheet.md").write_text("STM32F103", encoding="utf-8")
+
+    report = plan_document_intake(project_path=project, chip="ESP32C3")
+
+    assert report["ok"] is False
+    assert report["status"] == "awaiting_user_documents"
+    assert {item["kind"] for item in report["required_requests"]} >= {"svd", "linker", "datasheet_or_reference"}
+
+
 def test_resolve_chip_ignores_generated_debug_runs(tmp_path: Path) -> None:
     project = tmp_path / "project"
     project.mkdir()

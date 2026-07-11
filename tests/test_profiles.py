@@ -18,6 +18,10 @@ def test_profile_for_multiple_chip_families_returns_document_requirements() -> N
     assert rp2040["id"] == "rp2040"
     assert any(group["name"] == "register_map" for group in nrf52["required_groups"])
     assert get_mcu_profile(chip="GD32F103C8T6")["profile"]["id"] == "gd32f1"
+    esp32c3 = profile_for_chip("ESP32-C3 SuperMini")
+    assert esp32c3["id"] == "esp32c3"
+    assert esp32c3["vendor"] == "espressif"
+    assert esp32c3["recommended_debug_backends"] == ["esp-idf-openocd-gdb"]
 
 
 def test_manifest_template_never_includes_discovered_urls() -> None:
