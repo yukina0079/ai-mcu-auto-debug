@@ -118,6 +118,13 @@ ESP32-C3 SuperMini is supported through an optional ESP-IDF backend. `doctor` di
 
 ESP32-C3 SuperMini 通过可选 ESP-IDF backend 接入。`doctor` 可以发现由 EIM 或 VS Code 扩展管理的 ESP-IDF、Espressif OpenOCD 和 RISC-V GDB，不要求把它们加入全局 `PATH`。
 
+## Verified Hardware / 已验证硬件
+
+| Board / 板卡 | Status / 状态 | Verified path / 已验证路径 | Evidence / 验证内容 |
+|---|---|---|---|
+| STM32F103RCT6 generic board | verified / 已验证 | DAPLink/CMSIS-DAP + OpenOCD + GDB | Cortex-M3 and 256 KiB Flash identity, build, flash verification, reset/halt, core-register and RAM reads, source breakpoint, single-step, and resume. NRST was not connected on the verified bench. / 已验证 Cortex-M3 与 256 KiB Flash 识别、构建、烧录校验、复位暂停、核心寄存器与 RAM 读取、源码断点、单步和恢复运行；验证时未连接 NRST。 |
+| ESP32-C3 SuperMini | verified debug link / 调试链路已验证 | Built-in USB Serial/JTAG + Espressif OpenOCD + RISC-V GDB | Chip and 4 MB Flash identity, registers, memory read, hardware breakpoint, single-step, resume, and serial log. / 已验证芯片与 4 MB Flash 识别、寄存器、内存读取、硬件断点、单步、恢复运行和串口日志。 |
+
 ## Hardware Workflow / 硬件流程
 
 ```powershell
