@@ -8,6 +8,7 @@ import ai_mcu_debug.api as api
 from ai_mcu_debug.api import (
     accept_nonvision,
     build_firmware,
+    capture_board_image,
     check_prepared_context,
     collect_runtime_log,
     check_environment,
@@ -29,10 +30,12 @@ from ai_mcu_debug.api import (
     run_ai_debug,
     run_debug_op,
     scan_debug_probes_api,
+    scan_cameras,
     smoke_test_firmware,
     sync_document_repo,
     validate_target_config,
     write_debug_record,
+    analyze_board_image,
 )
 from ai_mcu_debug.models import DebugTargetConfig
 from tests.test_hardware_identity import IdentityDebugAdapter
@@ -76,6 +79,14 @@ def test_plan_docs_api_returns_user_request_plan(tmp_path: Path, monkeypatch) ->
     assert report["status"] == "awaiting_user_documents"
     assert any(item["kind"] == "svd" for item in report["required_requests"])
     assert report["policy"]["web_search_allowed"] is False
+
+
+def test_camera_api_requires_explicit_access() -> None:
+    scan = scan_cameras()
+    capture = capture_board_image()
+
+    assert scan["status"] == "camera_blocked_by_policy"
+    assert capture["status"] == "camera_blocked_by_policy"
 
 
 def test_plan_next_workflow_api_returns_tool_recommendations(tmp_path: Path) -> None:

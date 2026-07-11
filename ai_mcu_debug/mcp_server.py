@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import json
 import sys
 import traceback
+from pathlib import Path
 from typing import Any, Callable
 
 from ai_mcu_debug.api import (
@@ -11,11 +13,13 @@ from ai_mcu_debug.api import (
     bootstrap_agent,
     bootstrap_skill,
     build_firmware,
+    capture_board_image,
     check_prepared_context,
     check_environment,
     collect_runtime_log,
     collect_serial_log,
     diagnose_connection,
+    analyze_board_image,
     export_debug_handoff,
     fetch_user_documents,
     get_mcu_profile,
@@ -36,6 +40,7 @@ from ai_mcu_debug.api import (
     run_next_workflow,
     run_ai_debug,
     run_debug_op,
+    scan_cameras,
     scan_debug_probes_api,
     smoke_test_firmware,
     smoke_test_mcp_server,
@@ -206,7 +211,7 @@ SCHEMAS: dict[str, dict[str, Any]] = {
             "output": _string("Optional JSON bootstrap report output path."),
             "timeout_s": _number("MCP smoke test timeout in seconds.", default=10.0),
             "dry_run": _boolean("Report readiness without modifying global client config or touching hardware.", default=True),
-            "include_vision": _boolean("Treat postponed vision phase as a blocking audit requirement.", default=False),
+            "include_vision": _boolean("Treat the optional vision capability as a blocking audit requirement.", default=False),
         }
     ),
     "prepare_mcu_context": _object_schema(CONTEXT_PREP_PROPS),
@@ -238,7 +243,7 @@ SCHEMAS: dict[str, dict[str, Any]] = {
     "capability_audit": _object_schema(
         {
             "project": PROJECT_PATH,
-            "include_vision": _boolean("Include postponed camera/vision phase as a blocking requirement.", default=False),
+            "include_vision": _boolean("Include the optional camera/vision capability as a blocking requirement.", default=False),
             "output": _string("Optional JSON report output path."),
         }
     ),
@@ -284,7 +289,7 @@ SCHEMAS: dict[str, dict[str, Any]] = {
             "force": _boolean("Overwrite differing installed skill files only when explicitly intended.", default=False),
             "skip_install": _boolean("Skip copying the skill package.", default=False),
             "skip_smoke": _boolean("Skip launching the MCP server smoke test.", default=False),
-            "include_vision": _boolean("Treat postponed vision phase as a blocking audit requirement.", default=False),
+            "include_vision": _boolean("Treat the optional vision capability as a blocking audit requirement.", default=False),
             "timeout_s": _number("MCP smoke test timeout in seconds.", default=10.0),
         }
     ),
@@ -381,6 +386,45 @@ SCHEMAS: dict[str, dict[str, Any]] = {
             "output": _string("Optional JSON serial log report output path."),
         },
         required=["port"],
+    ),
+    "camera_scan": _object_schema(
+        {
+            "max_devices": _integer("Maximum camera indexes to probe.", default=5),
+            "backend": {
+                "type": "string",
+                "enum": ["auto", "dshow", "msmf", "v4l2"],
+                "default": "auto",
+                "description": "OpenCV camera backend.",
+            },
+            "allow_camera": _boolean("Must be true to permit camera device access.", default=False),
+            "output": _string("Optional JSON camera scan report output path."),
+        }
+    ),
+    "capture_board_image": _object_schema(
+        {
+            "camera_index": _integer("Camera device index.", default=0),
+            "image_output": _string("Captured JPEG/PNG output path.", default="debug_runs/vision/latest.jpg"),
+            "report_output": _string("Optional JSON observation report output path."),
+            "baseline": _string("Optional baseline image for deterministic change detection."),
+            "width": _integer("Requested capture width."),
+            "height": _integer("Requested capture height."),
+            "warmup_frames": _integer("Frames discarded while exposure settles.", default=5),
+            "backend": {
+                "type": "string",
+                "enum": ["auto", "dshow", "msmf", "v4l2"],
+                "default": "auto",
+                "description": "OpenCV camera backend.",
+            },
+            "allow_camera": _boolean("Must be true to permit camera capture.", default=False),
+        }
+    ),
+    "analyze_board_image": _object_schema(
+        {
+            "image": _string("Existing board image path."),
+            "baseline": _string("Optional baseline image for deterministic change detection."),
+            "output": _string("Optional JSON observation report output path."),
+        },
+        required=["image"],
     ),
     "repair_build": _object_schema(
         {
@@ -578,6 +622,18 @@ TOOLS: dict[str, dict[str, Any]] = {
         "description": "Collect UART/USB-serial evidence directly through pyserial when available.",
         "inputSchema": SCHEMAS["collect_serial_log"],
     },
+    "camera_scan": {
+        "description": "Discover camera indexes only when allow_camera=true; no image is retained.",
+        "inputSchema": SCHEMAS["camera_scan"],
+    },
+    "capture_board_image": {
+        "description": "Capture one bench image, return deterministic quality/change evidence, and attach the image for agent inspection.",
+        "inputSchema": SCHEMAS["capture_board_image"],
+    },
+    "analyze_board_image": {
+        "description": "Analyze and attach an existing board image for evidence-backed agent visual inspection.",
+        "inputSchema": SCHEMAS["analyze_board_image"],
+    },
     "repair_build": {
         "description": "Run the configured AI/code repair build loop only when allow_repair=true.",
         "inputSchema": SCHEMAS["repair_build"],
@@ -659,6 +715,9 @@ class McpServer:
             "smoke_test_firmware": lambda args: smoke_test_firmware(**args),
             "collect_runtime_log": lambda args: collect_runtime_log(**args),
             "collect_serial_log": lambda args: collect_serial_log(**args),
+            "camera_scan": lambda args: scan_cameras(**args),
+            "capture_board_image": lambda args: capture_board_image(**args),
+            "analyze_board_image": lambda args: analyze_board_image(**args),
             "repair_build": lambda args: repair_build(**args),
             "install_skill": lambda args: install_skill_package(**args),
             "mcu_profile": lambda args: get_mcu_profile(**args),
@@ -744,10 +803,20 @@ def _tool_descriptor(name: str, spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def _tool_result(result: Any, is_error: bool) -> dict[str, Any]:
-    return {
-        "content": [{"type": "text", "text": json.dumps(result, indent=2, ensure_ascii=False, default=str)}],
-        "isError": is_error,
-    }
+    content: list[dict[str, Any]] = [
+        {"type": "text", "text": json.dumps(result, indent=2, ensure_ascii=False, default=str)}
+    ]
+    if isinstance(result, dict) and result.get("ok") and result.get("image_path"):
+        image_path = Path(str(result["image_path"]))
+        if image_path.is_file():
+            content.append(
+                {
+                    "type": "image",
+                    "data": base64.b64encode(image_path.read_bytes()).decode("ascii"),
+                    "mimeType": str(result.get("mime_type") or "image/jpeg"),
+                }
+            )
+    return {"content": content, "isError": is_error}
 
 
 def _validate_tool_arguments(schema: dict[str, Any], args: Any) -> list[dict[str, Any]]:

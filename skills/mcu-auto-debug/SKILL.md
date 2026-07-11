@@ -1,13 +1,13 @@
 ---
 name: mcu-auto-debug
-description: Automates MCU project setup, code/build/test/debug loops, register and memory inspection, user-provided MCU document intake, UART observation, evidence reports, and safe MCP/CLI handoff for AI coding agents. Use when the user mentions MCU, embedded debug, datasheet, SVD, registers, memory reads/writes, flashing, OpenOCD, pyOCD, J-Link, probe-rs, DAPLink, ST-Link, UART logs, or AI-driven firmware debugging.
+description: Automates MCU project setup, code/build/test/debug loops, register and memory inspection, user-provided MCU document intake, UART and camera observation, evidence reports, and safe MCP/CLI handoff for AI coding agents. Use when the user mentions MCU, embedded debug, datasheet, SVD, registers, memory reads/writes, flashing, OpenOCD, pyOCD, J-Link, probe-rs, DAPLink, ST-Link, UART logs, camera inspection, board LEDs, or AI-driven firmware debugging.
 ---
 
 # MCU Auto Debug
 
 ## Core Rule
 
-Use deterministic tools for hardware, build, document, serial log, register, and memory work. Do not invent MCU register meanings, memory maps, errata, probe state, or datasheet facts. If evidence is missing, return `uncertain` or ask the user for the exact missing document or hardware detail.
+Use deterministic tools for hardware, build, document, serial log, camera, register, and memory work. Do not invent MCU register meanings, memory maps, errata, probe state, datasheet facts, or visible board state. If evidence is missing, return `uncertain` or ask the user for the exact missing document or hardware detail.
 
 ## First Commands
 
@@ -42,8 +42,9 @@ python -m ai_mcu_debug.cli install-skill --force
 6. Run `check-context` before relying on register names, memory maps, or errata.
 7. Build and smoke test through the configured build adapter.
 8. Use `serial-log`, `runtime-log`, or MCP `collect_serial_log` for UART observation when a serial instrument exists.
-9. Run `ai-debug --mode dry-run` before `ai-debug --mode read-only`.
-10. Export evidence with `export-handoff` when another AI or engineer needs to replay the work.
+9. When the user explicitly permits camera access, use `camera-capture --allow-camera` or MCP `capture_board_image`; inspect the returned image together with build/debug/log evidence and do not infer electrical correctness from appearance alone.
+10. Run `ai-debug --mode dry-run` before `ai-debug --mode read-only`.
+11. Export evidence with `export-handoff` when another AI or engineer needs to replay the work.
 
 ## ESP32-C3 / ESP-IDF
 
@@ -63,6 +64,7 @@ When the target is ESP32-C3 or an ESP32-C3 SuperMini:
 - Core registers may be read through the debugger; peripheral register meaning must come from `mcu_context`.
 - Register writes and memory writes require context validation and explicit user approval for the current board.
 - Flash, option bytes, clock/reset-control writes, code repair, `--force`, and hardware replay require explicit approval.
+- Camera access captures the surrounding environment and requires `--allow-camera` or MCP `allow_camera=true` for each scan/capture. Camera access does not touch target state.
 - Missing errata must be recorded as `errata_missing`, not treated as proof of no risk.
 
 ## Useful Commands
@@ -75,6 +77,9 @@ python -m ai_mcu_debug.cli init-workspace --project . --chip <chip> --context ex
 python -m ai_mcu_debug.cli build --config .embeddedskills/build.json
 python -m ai_mcu_debug.cli smoke-test --config .embeddedskills/build.json
 python -m ai_mcu_debug.cli serial-log --port <port> --baud 115200 --duration-s 5
+python -m ai_mcu_debug.cli camera-scan --allow-camera
+python -m ai_mcu_debug.cli camera-capture --camera-index 0 --image-output debug_runs/vision/latest.jpg --allow-camera
+python -m ai_mcu_debug.cli vision-analyze --image debug_runs/vision/latest.jpg --baseline debug_runs/vision/baseline.jpg
 python -m ai_mcu_debug.cli ai-debug --mode dry-run --workspace-config .embeddedskills/config.json
 python -m ai_mcu_debug.cli ai-debug --mode read-only --workspace-config .embeddedskills/config.json
 python -m ai_mcu_debug.cli export-handoff --output debug_runs/handoff.zip --zip
@@ -84,6 +89,6 @@ python -m ai_mcu_debug.cli init-workspace --output-dir .embeddedskills-esp32c3 -
 
 ## MCP Surface
 
-The MCP server exposes high-level tools such as `agent_bootstrap`, `workflow_plan`, `workflow_run`, `prepare_mcu_context`, `check_mcu_context`, `build_firmware`, `smoke_test_firmware`, `collect_runtime_log`, `collect_serial_log`, `run_ai_debug`, `debug_op_guarded`, `read_hardware_id`, `export_handoff`, and `replay_handoff`. Standalone flash is intentionally not exposed as an MCP tool; use `run_ai_debug` with explicit `allow_flash=true` only after user approval.
+The MCP server exposes high-level tools such as `agent_bootstrap`, `workflow_plan`, `workflow_run`, `prepare_mcu_context`, `check_mcu_context`, `build_firmware`, `smoke_test_firmware`, `collect_runtime_log`, `collect_serial_log`, `camera_scan`, `capture_board_image`, `analyze_board_image`, `run_ai_debug`, `debug_op_guarded`, `read_hardware_id`, `export_handoff`, and `replay_handoff`. Successful image tools attach a standard MCP image content block for agent visual inspection. Standalone flash is intentionally not exposed as an MCP tool; use `run_ai_debug` with explicit `allow_flash=true` only after user approval.
 
 See [REFERENCE.md](REFERENCE.md) for the extended command matrix and acceptance gates.

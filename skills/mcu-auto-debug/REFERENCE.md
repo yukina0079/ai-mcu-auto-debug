@@ -35,6 +35,9 @@ python -m ai_mcu_debug.cli build --config examples/build.cmake.json
 python -m ai_mcu_debug.cli smoke-test --config examples/build.cmake.json
 python -m ai_mcu_debug.cli runtime-log --config examples/build.cmake.json
 python -m ai_mcu_debug.cli serial-log --port <port> --baud 115200 --duration-s 5
+python -m ai_mcu_debug.cli camera-scan --allow-camera
+python -m ai_mcu_debug.cli camera-capture --camera-index 0 --image-output debug_runs/vision/latest.jpg --report-output debug_runs/vision/latest.json --allow-camera
+python -m ai_mcu_debug.cli vision-analyze --image debug_runs/vision/latest.jpg --baseline debug_runs/vision/baseline.jpg
 python -m ai_mcu_debug.cli repair-build --config examples/build.cmake.codex-repair.json
 python -m ai_mcu_debug.cli resolve-chip --project . --chip <chip>
 python -m ai_mcu_debug.cli doc-intake --project . --chip <chip>
@@ -200,7 +203,7 @@ The minimal stdio MCP server exposes only high-level safe tools:
 python -m ai_mcu_debug.cli mcp-server
 ```
 
-Tools currently exposed: `agent_bootstrap`, `workflow_plan`, `workflow_run`, `capability_audit`, `mcp_config`, `mcp_smoke`, `doctor`, `probe_scan`, `init_workspace`, `validate_target`, `connection_diagnose`, `resolve_chip`, `locate_documents`, `fetch_user_documents`, `ingest_documents`, `sync_document_repo`, `check_mcu_context`, `write_debug_record`, `build_firmware`, `smoke_test_firmware`, `collect_runtime_log`, `collect_serial_log`, `repair_build`, `install_skill`, `setup_project`, `accept_nonvision`, `mcu_profile`, `lint_mcu_manifest`, `prepare_mcu_context`, `plan_document_intake`, `run_ai_debug`, `debug_op_guarded`, `read_hardware_id`, `export_handoff`, `replay_handoff`, and `workspace_status`. The server delegates to the same API/CLI logic, so `allow_flash`, `allow_repair`, and `force` remain opt-in. `repair_build` is blocked unless `allow_repair=true`; standalone flash remains intentionally outside MCP and should go through `run_ai_debug` with explicit `allow_flash`.
+Tools currently exposed include `camera_scan`, `capture_board_image`, and `analyze_board_image` alongside the existing setup, build, debug, UART, knowledge, report, and handoff tools. Successful image tools return JSON evidence plus a standard MCP image content block for agent visual inspection. The server delegates to the same API/CLI logic, so `allow_camera`, `allow_flash`, `allow_repair`, and `force` remain opt-in. Camera scan/capture is blocked unless `allow_camera=true`; standalone flash remains intentionally outside MCP and should go through `run_ai_debug` with explicit `allow_flash`.
 
 `tools/list` publishes explicit JSON input schemas for every tool, including required fields, safe defaults, run-mode enums, debug operation enums, and policy-sensitive flags. `tools/call` validates incoming arguments against those schemas before dispatching, returning `status=invalid_arguments` for missing required fields, unexpected properties, type mismatches, or bad enum values. This keeps agent calls stable without moving safety policy out of the CLI/API layer.
 
@@ -212,14 +215,15 @@ Use `workflow_run` when those safe recommendations should be executed automatica
 
 ## Capability Audit
 
-Use `capability-audit` to produce a deterministic static readiness report for the non-vision automation surface:
+Use `capability-audit` to produce a deterministic static readiness report. Camera support remains optional unless `--include-vision` is supplied:
 
 ```text
 python -m ai_mcu_debug.cli capability-audit --project .
 python -m ai_mcu_debug.cli capability-audit --project . --output debug_runs/capability_audit/latest.json
+python -m ai_mcu_debug.cli capability-audit --project . --include-vision
 ```
 
-The audit checks evidence for realtime debug, build/test/repair loops, knowledge guards, user document intake, safe workflow orchestration, handoff replay, skill deployment, and safety gates across CLI commands, public API functions, MCP tools, tests, docs, and special policy checks. Vision/camera support is marked postponed and non-blocking by default; pass `--include-vision` only when camera evidence should become a blocking requirement.
+The audit checks evidence for realtime debug, build/test/repair loops, knowledge guards, user document intake, safe workflow orchestration, camera/image observation, handoff replay, skill deployment, and safety gates across CLI commands, public API functions, MCP tools, tests, docs, and special policy checks. Vision is available but non-blocking by default; `--include-vision` makes its static evidence a blocking readiness requirement. Runtime camera access still requires explicit `allow_camera` for each call.
 
 ## Skill Installation
 

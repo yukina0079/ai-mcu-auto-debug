@@ -49,7 +49,8 @@ For clients without stable MCP configuration, use the CLI commands directly from
 4. Build context with user-provided SVD/linker/startup/datasheet/reference manual/errata.
 5. Run `ai-debug --mode dry-run` first, then `ai-debug --mode read-only` when hardware is connected.
 6. Use `serial-log` or MCP `collect_serial_log` for UART observation when a serial adapter is present.
-7. Export reports or handoff packages when another agent or engineer needs to audit the run.
+7. Use `camera-capture --allow-camera` or MCP `capture_board_image` only after the user explicitly allows camera access; inspect the returned image together with debug and log evidence.
+8. Export reports or handoff packages when another agent or engineer needs to audit the run.
 
 1. 先运行 `agent-bootstrap` 并阅读 JSON 报告。
 2. 碰硬件前先运行 `workflow-plan`。
@@ -57,7 +58,8 @@ For clients without stable MCP configuration, use the CLI commands directly from
 4. 使用用户提供的 SVD/linker/startup/datasheet/reference manual/errata 构建 context。
 5. 先运行 `ai-debug --mode dry-run`，硬件已连接后再运行 `ai-debug --mode read-only`。
 6. 有串口适配器时，用 `serial-log` 或 MCP `collect_serial_log` 做 UART observation。
-7. 需要交接给其他 agent 或工程师时，导出报告或 handoff 包。
+7. 仅在用户明确允许摄像头访问后使用 `camera-capture --allow-camera` 或 MCP `capture_board_image`，并将返回图像与调试和日志证据一起分析。
+8. 需要交接给其他 agent 或工程师时，导出报告或 handoff 包。
 
 ## Safety Rules / 安全规则
 

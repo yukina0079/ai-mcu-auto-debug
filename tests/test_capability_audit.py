@@ -14,7 +14,8 @@ def test_capability_audit_reports_nonvision_ready(tmp_path: Path) -> None:
 
     assert report["ok"] is True
     assert report["status"] == "nonvision_ready"
-    assert report["scope"]["vision_postponed"] is True
+    assert report["scope"]["vision_postponed"] is False
+    assert report["scope"]["vision_available"] is True
     capability_ids = {item["id"] for item in report["capabilities"]}
     assert {
         "realtime_debug",
@@ -35,11 +36,11 @@ def test_capability_audit_reports_nonvision_ready(tmp_path: Path) -> None:
 def test_capability_audit_can_include_vision_as_blocking() -> None:
     report = audit_capabilities(project_path=ROOT, include_vision=True)
 
-    assert report["ok"] is False
-    assert report["status"] == "capability_gaps_found"
+    assert report["ok"] is True
+    assert report["status"] == "vision_ready"
     vision = next(item for item in report["capabilities"] if item["id"] == "vision_loop")
     assert vision["blocking"] is True
-    assert vision["status"] == "postponed"
+    assert vision["status"] == "ok"
 
 
 def test_capability_audit_api() -> None:

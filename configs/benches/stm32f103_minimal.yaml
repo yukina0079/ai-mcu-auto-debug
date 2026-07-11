@@ -14,6 +14,10 @@ instruments:
     id: uart_serial_optional
     config: configs/instruments/uart_serial.yaml
     required: false
+  camera:
+    id: camera_usb_optional
+    config: configs/instruments/camera_usb_optional.yaml
+    required: false
 workflow:
   default: configs/workflows/stm32f103_readonly_debug.yaml
 evidence:
@@ -27,3 +31,4 @@ safety:
   force_allowed_by_default: false
   parallel_hardware_debug_allowed: false
   vision_required: false
+  camera_allowed_by_default: false

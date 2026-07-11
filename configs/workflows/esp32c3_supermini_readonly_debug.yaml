@@ -19,6 +19,12 @@ steps:
     command: ai-mcu-debug serial-log --port COM13 --baud 115200 --duration-s 5
     touches_hardware: false
     optional: true
+  - name: camera_observation_optional
+    command: ai-mcu-debug camera-capture --camera-index 0 --image-output debug_runs/vision/esp32c3_latest.jpg --allow-camera
+    touches_hardware: false
+    captures_environment: true
+    requires_explicit_camera_access: true
+    optional: true
   - name: read_only_debug
     command: ai-mcu-debug ai-debug --mode read-only --workspace-config .embeddedskills-esp32c3/config.json
     touches_hardware: true

@@ -1,0 +1,26 @@
+schema_version: 1
+id: camera_usb_optional
+role: visual_observation
+type: usb_camera
+description: Optional USB or built-in camera for board, LED, display, and wiring evidence.
+description_zh: 用于开发板、LED、显示屏和接线证据采集的可选 USB 或内置摄像头。
+defaults:
+  camera_index: 0
+  backend: auto
+  image_output: debug_runs/vision/latest.jpg
+  warmup_frames: 5
+capabilities:
+  - camera_discovery
+  - still_image_capture
+  - image_quality_metrics
+  - baseline_change_detection
+  - agent_visual_inspection
+tools:
+  cli: ai-mcu-debug camera-capture --camera-index 0 --allow-camera
+  mcp_tool: capture_board_image
+safety:
+  explicit_camera_permission_required: true
+  captures_environment: true
+  touches_target_state: false
+  flash_allowed: false
+  repair_allowed: false

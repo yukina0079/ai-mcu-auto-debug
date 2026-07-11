@@ -54,12 +54,14 @@ Use this repository as an AI MCU automation toolchain. Run agent-bootstrap first
 - 知识库防幻觉：从用户提供的 SVD、linker/startup、datasheet、reference manual、errata 或资料仓库生成 `mcu_context.json`。
 - Signal observation: `runtime-log` wraps existing UART/RTT/SWO tools, and `serial-log` / MCP `collect_serial_log` can read UART through pyserial.
 - 信号观测：`runtime-log` 复用已有 UART/RTT/SWO 工具，`serial-log` / MCP `collect_serial_log` 可通过 pyserial 读取串口。
+- Visual observation: `camera-scan`, `camera-capture`, and MCP `capture_board_image` collect image evidence, deterministic quality/change metrics, and a standard MCP image block for agent visual inspection.
+- 视觉观测：`camera-scan`、`camera-capture` 和 MCP `capture_board_image` 可采集图像证据、可重复的画质/变化指标，并通过标准 MCP 图像内容交给 agent 进行视觉分析。
 - Agent deployment: `agent-bootstrap`, `skill-bootstrap`, `mcp-config`, and `mcp-smoke` make the repo easy to hand to different AI coding agents.
 - Agent 部署：`agent-bootstrap`、`skill-bootstrap`、`mcp-config` 和 `mcp-smoke` 让不同 AI 编程工具更容易接入。
 
-Camera/vision inspection is intentionally not shipped in the current release. It remains a future optional instrument, not a blocker for the non-vision toolchain.
+Camera access is disabled by default because it captures the surrounding environment. Each scan or capture requires explicit `allow_camera=true` / `--allow-camera`. Visual appearance is supporting evidence only and must be correlated with debug, serial, build, and MCU-document evidence.
 
-当前版本不发布摄像头/视觉检测能力。它会作为未来可选 instrument，而不是非视觉工具链的阻塞项。
+摄像头会拍摄周边环境，因此默认禁用。每次扫描或采集都必须显式设置 `allow_camera=true` / `--allow-camera`。外观只能作为辅助证据，必须与调试、串口、构建和 MCU 资料证据交叉判断。
 
 ## Agent Compatibility / Agent 兼容
 
@@ -92,8 +94,8 @@ ai-mcu-debug mcp-smoke --project .
 - `Bench`：由 DUT、仪器、接线说明、workflow 和安全策略组成的可复现实验台配置。
 - `DUT`: the device under test, for example an STM32F103 board.
 - `DUT`：被测设备，例如 STM32F103 开发板。
-- `Instrument`: debug probe, UART adapter, runtime-log command, or future camera/signal tool.
-- `Instrument`：调试探针、UART 转接器、runtime-log 命令，或未来的摄像头/信号工具。
+- `Instrument`: debug probe, UART adapter, runtime-log command, or optional camera/signal tool.
+- `Instrument`：调试探针、UART 转接器、runtime-log 命令，或可选的摄像头/信号工具。
 - `Workflow`: repeatable steps such as doctor -> probe scan -> context check -> build -> serial observation -> read-only debug -> report.
 - `Workflow`：可复现步骤，例如 doctor -> probe scan -> context check -> build -> serial observation -> read-only debug -> report。
 - `Evidence/Report`: JSON/Markdown artifacts that another agent or engineer can replay or audit.
@@ -108,6 +110,7 @@ configs/benches/stm32f103_minimal.yaml
 configs/boards/stm32f103rct6_daplink.yaml
 configs/instruments/daplink_cmsis_dap.yaml
 configs/instruments/uart_serial.yaml
+configs/instruments/camera_usb_optional.yaml
 configs/workflows/stm32f103_readonly_debug.yaml
 configs/benches/esp32c3_supermini.yaml
 configs/instruments/esp32c3_usb_serial_jtag.yaml
@@ -160,6 +163,21 @@ UART observation example:
 ai-mcu-debug serial-log --port COM3 --baud 115200 --duration-s 5 --output debug_runs/serial/latest.json
 ai-mcu-debug workflow-run --project . --chip STM32F103RCT6 --no-hardware
 ```
+
+Camera observation example (install the optional backend first):
+
+摄像头观测示例（先安装可选 backend）：
+
+```powershell
+python -m pip install -e ".[vision]"
+ai-mcu-debug camera-scan --allow-camera
+ai-mcu-debug camera-capture --camera-index 0 --image-output debug_runs/vision/latest.jpg --report-output debug_runs/vision/latest.json --allow-camera
+ai-mcu-debug vision-analyze --image debug_runs/vision/latest.jpg --baseline debug_runs/vision/baseline.jpg
+```
+
+MCP tools `camera_scan`, `capture_board_image`, and `analyze_board_image` expose the same flow. Successful image tools return both a JSON evidence report and a standard MCP image content block, allowing a vision-capable agent to inspect LEDs, displays, wiring, and visible board state without coupling this project to one model provider.
+
+MCP 工具 `camera_scan`、`capture_board_image` 和 `analyze_board_image` 提供同一流程。图像工具成功后会同时返回 JSON 证据报告和标准 MCP 图像内容，使具备视觉能力的 agent 能检查 LED、显示屏、接线和可见板卡状态，而不绑定特定模型供应商。
 
 For handoff replay, keep `workflow-run --no-hardware` unless hardware access is explicitly intended; policy records this risk as `replay_workflow_run_may_touch_hardware` when the flag is absent.
 

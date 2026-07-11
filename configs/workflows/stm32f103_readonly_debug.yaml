@@ -22,6 +22,12 @@ steps:
     command: ai-mcu-debug serial-log --port <port> --baud 115200 --duration-s 5
     touches_hardware: false
     optional: true
+  - name: camera_observation_optional
+    command: ai-mcu-debug camera-capture --camera-index 0 --image-output debug_runs/vision/stm32f103_latest.jpg --allow-camera
+    touches_hardware: false
+    captures_environment: true
+    requires_explicit_camera_access: true
+    optional: true
   - name: read_only_debug
     command: ai-mcu-debug ai-debug --mode read-only --project . --context examples/mcu_context.stm32f103rct6.json --build-config examples/build.stm32f103rct6.json --target examples/debug.target.cmsis-dap.stm32f103rct6.json --task examples/debug_task.stm32f103rct6.json
     touches_hardware: true

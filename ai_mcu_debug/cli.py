@@ -53,6 +53,7 @@ from .serial_log import collect_serial_log
 from .skill_bootstrap import bootstrap_skill_environment
 from .skill_install import install_skill
 from .target_validation import validate_debug_target
+from .vision import analyze_board_image, capture_camera_image, scan_cameras
 from .workflow_plan import plan_workflow
 from .workflow_run import run_workflow
 from .workspace import init_workspace_config, load_workspace_defaults, workspace_status
@@ -427,6 +428,28 @@ def main() -> int:
     serial_log_parser.add_argument("--duration-s", type=float, default=5.0)
     serial_log_parser.add_argument("--timeout-s", type=float, default=0.2)
     serial_log_parser.add_argument("--output")
+
+    camera_scan_parser = subparsers.add_parser("camera-scan")
+    camera_scan_parser.add_argument("--max-devices", type=int, default=5)
+    camera_scan_parser.add_argument("--backend", choices=["auto", "dshow", "msmf", "v4l2"], default="auto")
+    camera_scan_parser.add_argument("--allow-camera", action="store_true")
+    camera_scan_parser.add_argument("--output")
+
+    camera_capture_parser = subparsers.add_parser("camera-capture")
+    camera_capture_parser.add_argument("--camera-index", type=int, default=0)
+    camera_capture_parser.add_argument("--image-output", default="debug_runs/vision/latest.jpg")
+    camera_capture_parser.add_argument("--report-output")
+    camera_capture_parser.add_argument("--baseline")
+    camera_capture_parser.add_argument("--width", type=int)
+    camera_capture_parser.add_argument("--height", type=int)
+    camera_capture_parser.add_argument("--warmup-frames", type=int, default=5)
+    camera_capture_parser.add_argument("--backend", choices=["auto", "dshow", "msmf", "v4l2"], default="auto")
+    camera_capture_parser.add_argument("--allow-camera", action="store_true")
+
+    vision_analyze_parser = subparsers.add_parser("vision-analyze")
+    vision_analyze_parser.add_argument("--image", required=True)
+    vision_analyze_parser.add_argument("--baseline")
+    vision_analyze_parser.add_argument("--output")
 
     loop_parser = subparsers.add_parser("closed-loop")
     loop_parser.add_argument("--build-config", default="examples/build.cmake.json")
@@ -1036,6 +1059,40 @@ def main() -> int:
             baud=args.baud,
             duration_s=args.duration_s,
             timeout_s=args.timeout_s,
+            output=Path(args.output) if args.output else None,
+        )
+        print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
+        return 0 if report.get("ok") else 1
+
+    if args.command == "camera-scan":
+        report = scan_cameras(
+            max_devices=args.max_devices,
+            backend=args.backend,
+            allow_camera=args.allow_camera,
+            output=Path(args.output) if args.output else None,
+        )
+        print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
+        return 0 if report.get("ok") else 1
+
+    if args.command == "camera-capture":
+        report = capture_camera_image(
+            camera_index=args.camera_index,
+            image_output=Path(args.image_output),
+            report_output=Path(args.report_output) if args.report_output else None,
+            baseline=Path(args.baseline) if args.baseline else None,
+            width=args.width,
+            height=args.height,
+            warmup_frames=args.warmup_frames,
+            backend=args.backend,
+            allow_camera=args.allow_camera,
+        )
+        print(json.dumps(report, indent=2, ensure_ascii=False, default=str))
+        return 0 if report.get("ok") else 1
+
+    if args.command == "vision-analyze":
+        report = analyze_board_image(
+            image=Path(args.image),
+            baseline=Path(args.baseline) if args.baseline else None,
             output=Path(args.output) if args.output else None,
         )
         print(json.dumps(report, indent=2, ensure_ascii=False, default=str))

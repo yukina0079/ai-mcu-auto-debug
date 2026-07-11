@@ -13,6 +13,7 @@ Reports are the evidence layer for AI MCU automation. They let another agent or 
 - `connection-diagnose`: bounded attach attempts without flash or memory writes.
 - `hardware-id`: read-only silicon identity evidence.
 - `serial-log`: UART observation captured directly through pyserial.
+- `camera-capture` / `vision-analyze`: image hash, quality metrics, optional baseline change metrics, and agent visual inspection evidence.
 - `export-handoff`: replayable package for another agent or CI job.
 
 - `capability-audit`：CLI、API、MCP、测试、文档和安全策略的静态就绪检查。
@@ -20,6 +21,7 @@ Reports are the evidence layer for AI MCU automation. They let another agent or 
 - `connection-diagnose`：不烧录、不写内存的有限连接诊断。
 - `hardware-id`：只读硅片身份识别证据。
 - `serial-log`：通过 pyserial 直接采集的 UART observation。
+- `camera-capture` / `vision-analyze`：图像哈希、画质指标、可选基线变化指标和 agent 视觉分析证据。
 - `export-handoff`：交给另一个 agent 或 CI 的可回放包。
 
 ## Minimum Fields / 最小字段
@@ -49,6 +51,7 @@ Every public report should include:
 ```powershell
 ai-mcu-debug capability-audit --project . --output debug_runs/capability_audit/latest.json
 ai-mcu-debug serial-log --port COM3 --baud 115200 --duration-s 5 --output debug_runs/serial/latest.json
+ai-mcu-debug camera-capture --camera-index 0 --image-output debug_runs/vision/latest.jpg --report-output debug_runs/vision/latest.json --allow-camera
 ai-mcu-debug export-handoff --output debug_runs/handoff.zip --project . --report-dir debug_runs --zip
 ai-mcu-debug replay-handoff --manifest debug_runs/handoff/handoff_manifest.json
 ```

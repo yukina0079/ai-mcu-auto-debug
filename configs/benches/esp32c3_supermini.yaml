@@ -9,6 +9,10 @@ instruments:
   usb_serial_jtag:
     id: esp32c3_usb_serial_jtag
     config: configs/instruments/esp32c3_usb_serial_jtag.yaml
+  camera:
+    id: camera_usb_optional
+    config: configs/instruments/camera_usb_optional.yaml
+    required: false
 workflow:
   default: configs/workflows/esp32c3_supermini_readonly_debug.yaml
 evidence:
@@ -20,3 +24,4 @@ safety:
   force_allowed_by_default: false
   parallel_hardware_debug_allowed: false
   vision_required: false
+  camera_allowed_by_default: false

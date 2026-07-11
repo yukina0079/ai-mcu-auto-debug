@@ -145,12 +145,12 @@ CAPABILITIES: tuple[dict[str, Any], ...] = (
 VISION_CAPABILITY = {
     "id": "vision_loop",
     "phase": "phase3",
-    "description": "Camera/image-based board state analysis.",
-    "status": "postponed",
-    "ok": False,
-    "blocking": False,
-    "missing": ["Vision phase is intentionally postponed by project policy."],
-    "evidence": [],
+    "description": "Capture camera/image evidence, run deterministic quality/change checks, and return images to vision-capable agents.",
+    "cli": {"camera-scan", "camera-capture", "vision-analyze"},
+    "api": {"scan_cameras", "capture_board_image", "analyze_board_image"},
+    "mcp": {"camera_scan", "capture_board_image", "analyze_board_image"},
+    "tests": {"tests/test_vision.py", "tests/test_mcp_server.py"},
+    "docs": {"allow_camera", "camera-capture", "capture_board_image", "agent visual inspection"},
 }
 
 
@@ -179,22 +179,30 @@ def audit_capabilities(
         )
         for item in CAPABILITIES
     ]
-    if include_vision:
-        capabilities.append(dict(VISION_CAPABILITY, blocking=True))
-    else:
-        capabilities.append(dict(VISION_CAPABILITY))
+    vision_capability = _audit_capability(
+        VISION_CAPABILITY,
+        project_path=project_path,
+        cli_commands=cli_commands,
+        api_functions=api_functions,
+        mcp_tools=mcp_tools,
+        tracked_files=tracked_files,
+        docs_text=docs_text,
+    )
+    vision_capability["blocking"] = include_vision
+    capabilities.append(vision_capability)
 
     required = [item for item in capabilities if item.get("blocking", True)]
     ok = all(item.get("ok") for item in required)
     report: dict[str, Any] = {
         "ok": ok,
-        "status": "nonvision_ready" if ok else "capability_gaps_found",
+        "status": ("vision_ready" if include_vision else "nonvision_ready") if ok else "capability_gaps_found",
         "project": str(project_path),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "scope": {
             "nonvision_required": True,
             "vision_required": include_vision,
-            "vision_postponed": not include_vision,
+            "vision_available": vision_capability.get("ok", False),
+            "vision_postponed": False,
         },
         "summary": {
             "capabilities_total": len(capabilities),
@@ -210,12 +218,15 @@ def audit_capabilities(
             "flash_allowed_by_default": False,
             "repair_allowed_by_default": False,
             "force_allowed_by_default": False,
+            "camera_allowed_by_default": False,
             "vision_allowed": include_vision,
         },
         "verification_commands": [
             "python -m pytest",
             "python -m ai_mcu_debug.cli mcp-smoke --project .",
             "python -m ai_mcu_debug.cli capability-audit",
+            "python -m ai_mcu_debug.cli capability-audit --include-vision",
+            "python -m ai_mcu_debug.cli camera-scan --allow-camera",
             "python -m ai_mcu_debug.cli workflow-run --project . --chip <chip> --no-hardware",
         ],
         "next_actions": _next_actions(capabilities),
@@ -362,8 +373,13 @@ def _docs_text(project_path: Path) -> str:
 def _next_actions(capabilities: list[dict[str, Any]]) -> list[str]:
     missing = [item for item in capabilities if item.get("blocking", True) and not item.get("ok")]
     if not missing:
+        vision_required = any(item.get("id") == "vision_loop" and item.get("blocking") for item in capabilities)
         return [
-            "Non-vision automation surface is capability-complete by static audit.",
-            "Run python -m pytest and a project-specific workflow-run/accept-nonvision gate for runtime verification.",
+            (
+                "Vision-inclusive automation surface is capability-complete by static audit."
+                if vision_required
+                else "Non-vision automation surface is capability-complete by static audit; optional vision support is available."
+            ),
+            "Run python -m pytest and project-specific hardware/camera acceptance for runtime verification.",
         ]
     return [f"Complete missing evidence for {item['id']}: {', '.join(item.get('missing', []))}" for item in missing]

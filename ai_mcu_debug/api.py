@@ -39,6 +39,11 @@ from ai_mcu_debug.serial_log import collect_serial_log as collect_serial_log_cap
 from ai_mcu_debug.skill_bootstrap import bootstrap_skill_environment
 from ai_mcu_debug.skill_install import install_skill
 from ai_mcu_debug.target_validation import validate_debug_target
+from ai_mcu_debug.vision import (
+    analyze_board_image as analyze_board_image_file,
+    capture_camera_image as capture_camera_frame,
+    scan_cameras as scan_camera_devices,
+)
 from ai_mcu_debug.workflow_plan import plan_workflow
 from ai_mcu_debug.workflow_run import run_workflow
 from ai_mcu_debug.workspace import init_workspace_config, load_workspace_defaults, workspace_status
@@ -655,6 +660,65 @@ def collect_serial_log(
         baud=baud,
         duration_s=duration_s,
         timeout_s=timeout_s,
+        output=Path(output) if output else None,
+    )
+
+
+def scan_cameras(
+    *,
+    max_devices: int = 5,
+    backend: str = "auto",
+    allow_camera: bool = False,
+    output: str | Path | None = None,
+) -> dict[str, Any]:
+    """Discover local cameras only when camera access is explicitly allowed."""
+
+    return scan_camera_devices(
+        max_devices=max_devices,
+        backend=backend,
+        allow_camera=allow_camera,
+        output=Path(output) if output else None,
+    )
+
+
+def capture_board_image(
+    *,
+    camera_index: int = 0,
+    image_output: str | Path = "debug_runs/vision/latest.jpg",
+    report_output: str | Path | None = None,
+    baseline: str | Path | None = None,
+    width: int | None = None,
+    height: int | None = None,
+    warmup_frames: int = 5,
+    backend: str = "auto",
+    allow_camera: bool = False,
+) -> dict[str, Any]:
+    """Capture a camera frame for deterministic checks and agent-side visual inspection."""
+
+    return capture_camera_frame(
+        camera_index=camera_index,
+        image_output=Path(image_output),
+        report_output=Path(report_output) if report_output else None,
+        baseline=Path(baseline) if baseline else None,
+        width=width,
+        height=height,
+        warmup_frames=warmup_frames,
+        backend=backend,
+        allow_camera=allow_camera,
+    )
+
+
+def analyze_board_image(
+    *,
+    image: str | Path,
+    baseline: str | Path | None = None,
+    output: str | Path | None = None,
+) -> dict[str, Any]:
+    """Analyze an existing board image and return it through MCP as visual evidence."""
+
+    return analyze_board_image_file(
+        image=Path(image),
+        baseline=Path(baseline) if baseline else None,
         output=Path(output) if output else None,
     )
 

@@ -4,7 +4,7 @@ import inspect
 import json
 
 import ai_mcu_debug.api as api
-from ai_mcu_debug.mcp_server import McpServer
+from ai_mcu_debug.mcp_server import McpServer, _tool_result
 
 
 def test_mcp_server_lists_core_tools() -> None:
@@ -38,6 +38,9 @@ def test_mcp_server_lists_core_tools() -> None:
         "smoke_test_firmware",
         "collect_runtime_log",
         "collect_serial_log",
+        "camera_scan",
+        "capture_board_image",
+        "analyze_board_image",
         "repair_build",
         "install_skill",
         "mcu_profile",
@@ -80,6 +83,22 @@ def test_mcp_server_schema_guides_policy_sensitive_tools() -> None:
     assert debug_schema["required"] == ["target", "operation"]
     assert "write-memory" in debug_schema["properties"]["operation"]["enum"]
 
+    camera_schema = tools["capture_board_image"]["inputSchema"]
+    assert camera_schema["properties"]["allow_camera"]["default"] is False
+
+
+def test_mcp_image_result_attaches_standard_image_content(tmp_path) -> None:
+    image = tmp_path / "frame.jpg"
+    image.write_bytes(b"jpeg-evidence")
+
+    result = _tool_result(
+        {"ok": True, "image_path": str(image), "mime_type": "image/jpeg"},
+        is_error=False,
+    )
+
+    assert [item["type"] for item in result["content"]] == ["text", "image"]
+    assert result["content"][1]["mimeType"] == "image/jpeg"
+
 
 def test_mcp_server_schemas_match_public_api_parameters() -> None:
     response = McpServer().handle({"jsonrpc": "2.0", "id": 7, "method": "tools/list"})
@@ -112,6 +131,9 @@ def test_mcp_server_schemas_match_public_api_parameters() -> None:
         "smoke_test_firmware": api.smoke_test_firmware,
         "collect_runtime_log": api.collect_runtime_log,
         "collect_serial_log": api.collect_serial_log,
+        "camera_scan": api.scan_cameras,
+        "capture_board_image": api.capture_board_image,
+        "analyze_board_image": api.analyze_board_image,
         "repair_build": api.repair_build,
         "install_skill": api.install_skill_package,
         "mcu_profile": api.get_mcu_profile,
