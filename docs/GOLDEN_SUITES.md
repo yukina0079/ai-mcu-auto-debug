@@ -1,41 +1,29 @@
-# Golden Suites / 黄金测试套件
+# Golden Suite
 
-![Golden suite reports](assets/golden-suite-reports.png)
+![Golden Suite 与报告](assets/golden-suite-reports.png)
 
-Golden suites are reproducible workflows that prove a board/toolchain path with evidence instead of claims.
+Golden Suite 是可复现的验证流程，用报告和日志证明板卡、工具链与调试路径确实工作，而不是只声明支持。
 
-Golden suite 是可复现的工作流，用证据证明板卡/工具链路径，而不是只写宣传描述。
+## 当前套件
 
-## Current Suites / 当前套件
-
-| Suite | Status | DUT | Instruments | Evidence |
+| 套件 | 状态 | DUT | Instrument | 已验证证据 |
 |---|---|---|---|---|
-| `stm32f103_readonly_debug` | verified | STM32F103RCT6 | DAPLink/CMSIS-DAP through OpenOCD, optional UART | Build and verified flash, Cortex-M3 identity, reset/halt, core registers, RAM read, source breakpoint, single-step, resume, and evidence-backed context |
-| `esp32c3_supermini_readonly_debug` | verified debug link | ESP32-C3 SuperMini | Built-in USB Serial/JTAG | ESP-IDF environment, chip/Flash identity, registers, memory, hardware breakpoint, single-step, serial log |
+| `stm32f103_readonly_debug` | 已验证 | STM32F103RCT6 | DAPLink/CMSIS-DAP + OpenOCD，可选 UART | 构建与烧录校验、Cortex-M3 身份、复位暂停、核心寄存器、RAM 读取、源码断点、单步、恢复运行和基于资料的 context |
+| `esp32c3_supermini_readonly_debug` | 调试链路已验证 | ESP32-C3 SuperMini | 内置 USB Serial/JTAG | ESP-IDF 环境、芯片与 Flash 身份、寄存器、内存、硬件断点、单步和串口日志 |
 
-`candidate` means the suite exists and can be run, but public verification depends on the current maintainer bench and report artifacts.
+`candidate` 表示套件已存在且可以执行，但尚未获得当前维护者 Bench 的公开验证报告。
 
-`candidate` 表示套件已存在且可运行，但公开 verified 状态取决于当前维护者 bench 和报告产物。
+## 期望证据
 
-## Expected Evidence / 期望证据
+- `doctor` 生成的环境报告。
+- `probe-scan` 或目标配置提供的探针证据。
+- `check-context` 的知识 context 校验结果。
+- 构建与 smoke test 输出。
+- 按配置执行的复位暂停、核心寄存器、内存读取、断点和单步证据。
+- 存在 UART Instrument 时，由 `runtime-log`、`serial-log` 或 MCP `collect_serial_log` 生成的串口观测。
+- 默认不接触硬件即可供其他 Agent 回放的 handoff 包或 JSON 报告。
 
-- Environment report from `doctor`.
-- Probe evidence from `probe-scan` or target config.
-- Context validation from `check-context`.
-- Build and smoke test output.
-- Debug evidence: reset/halt, core registers, memory read, breakpoint, single-step when configured.
-- UART observation through `runtime-log`, `serial-log`, or MCP `collect_serial_log` when a UART instrument exists.
-- Handoff package or JSON report that another agent can replay without touching hardware by default.
-
-- `doctor` 环境报告。
-- `probe-scan` 或 target config 提供的探针证据。
-- `check-context` 的 context 校验结果。
-- 构建和 smoke test 输出。
-- 调试证据：按配置包含 reset/halt、核心寄存器、内存读取、断点、单步。
-- 存在 UART instrument 时，通过 `runtime-log`、`serial-log` 或 MCP `collect_serial_log` 做 UART observation。
-- 默认不触碰硬件也可被另一个 agent 回放的 handoff 包或 JSON 报告。
-
-## Run Example / 运行示例
+## 运行示例
 
 ```powershell
 ai-mcu-debug check-context --context examples/mcu_context.stm32f103rct6.json
@@ -44,6 +32,4 @@ ai-mcu-debug smoke-test --config examples/build.stm32f103rct6.json
 ai-mcu-debug ai-debug --mode read-only --project . --context examples/mcu_context.stm32f103rct6.json --build-config examples/build.stm32f103rct6.json --target examples/debug.target.cmsis-dap.stm32f103rct6.json --task examples/debug_task.stm32f103rct6.json
 ```
 
-No suite should require camera/vision in the current public release.
-
-当前公开版本的 suite 不应要求摄像头/视觉能力。
+当前公开版本的 Golden Suite 不依赖摄像头或视觉能力。

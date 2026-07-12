@@ -1,7 +1,7 @@
 [project]
 name = "ai-mcu-debug"
 version = "0.1.0"
-description = "Low-coupling AI assisted MCU debug automation framework"
+description = "面向 AI Agent 的低耦合 MCU 自动调试工具链"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

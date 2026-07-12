@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DOCS = [
     ROOT / "README.md",
+    ROOT / "README_EN.md",
     ROOT / "AGENTS.md",
     ROOT / "docs/AGENT_QUICKSTART.md",
     ROOT / "docs/AI_AGENT_USAGE.md",
@@ -42,3 +43,18 @@ def test_readme_does_not_link_internal_comparison_doc() -> None:
 
     assert "PROJECT_COMPARISON" not in text
     assert "EZ32Inc" not in text
+
+
+def test_readme_is_chinese_first_with_english_entry() -> None:
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "[English](README_EN.md)" in text
+    assert "面向 AI Agent 的开源 MCU 自动调试工具链" in text
+    assert text.index("面向 AI Agent 的开源 MCU 自动调试工具链") < text.index("## 快速开始")
+
+
+def test_verified_board_claims_are_preserved() -> None:
+    text = (ROOT / "docs/VERIFIED_BOARDS.md").read_text(encoding="utf-8")
+
+    assert "STM32F103RCT6 通用板 | 已验证" in text
+    assert "ESP32-C3 SuperMini | 调试链路已验证" in text

@@ -361,6 +361,7 @@ def _docs_text(project_path: Path) -> str:
     parts: list[str] = []
     for path in [
         project_path / "README.md",
+        project_path / "README_EN.md",
         project_path / "skills" / "mcu-auto-debug" / "SKILL.md",
         project_path / "skills" / "mcu-auto-debug" / "REFERENCE.md",
         project_path / "ai_mcu_debug" / "replay.py",

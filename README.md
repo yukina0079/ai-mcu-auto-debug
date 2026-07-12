@@ -1,23 +1,21 @@
 # AI MCU Auto Debug
 
+[中文](README.md) | [English](README_EN.md)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
 
-![AI MCU Auto Debug hero](docs/assets/hero-ai-mcu-debug.png)
+![AI MCU Auto Debug 总览](docs/assets/hero-ai-mcu-debug.png)
 
-AI MCU Auto Debug is an open-source automation toolchain for AI agents that need to write, build, flash, debug, observe, and report on MCU firmware. It keeps the core low-coupling: existing build tools, OpenOCD/J-Link/pyOCD/probe-rs style debuggers, CMSIS-SVD/user-provided documents, UART logs, CLI, MCP, and skills are connected through small deterministic adapters.
+AI MCU Auto Debug 是一个面向 AI Agent 的开源 MCU 自动调试工具链。它把代码编写、构建、烧录、在线调试、串口观测、摄像头画面和证据报告连接成自动化闭环。
 
-AI MCU Auto Debug 是一个面向 AI agent 的开源 MCU 自动化工具链，用来完成代码编写、构建、烧录、调试、观测和报告闭环。项目保持低耦合：复用现有构建工具、OpenOCD/J-Link/pyOCD/probe-rs 调试后端、CMSIS-SVD/用户提供资料、UART 日志、CLI、MCP 和 skill，而不是把所有东西绑死在一个平台里。
+项目坚持低耦合：复用 CMake、Keil、ESP-IDF、OpenOCD、J-Link、pyOCD、probe-rs、CMSIS-SVD、UART 和用户提供的芯片资料，通过小型适配器统一暴露为 CLI、Python API、MCP 工具和可安装 Skill，而不是把所有能力绑定到单一平台。
 
-> Images in this repository are AI-generated illustrative assets. They do not represent a specific vendor board, probe, or certification.
->
-> 仓库图片为 AI 生成的说明性素材，不代表某个具体厂商开发板、探针或认证。
+> 仓库中的说明图由 AI 生成，仅用于表达架构，不代表特定厂商板卡、探针或认证。
 
-## Quick Start / 快速开始
+## 快速开始
 
-Give this repository URL to an AI coding agent, then ask it to run the safe bootstrap first.
-
-把仓库地址发给 AI 编程工具后，让它先执行安全部署检查。
+把仓库地址发给 Codex、Claude、OpenCode、Trae、Qoder 或其他 AI 编程工具，并让它先执行安全部署检查：
 
 ```powershell
 git clone https://github.com/yukina0079/ai-mcu-auto-debug.git
@@ -30,46 +28,29 @@ ai-mcu-debug doctor
 ai-mcu-debug capability-audit --project .
 ```
 
-Recommended first prompt for Codex, Claude, OpenCode, Trae, Qoder, or another vibe coding agent:
-
-推荐给 Codex、Claude、OpenCode、Trae、Qoder 或其他 vibe coding 工具的第一句话：
+推荐发给 Agent 的第一条提示词：
 
 ```text
-Use this repository as an AI MCU automation toolchain. Run agent-bootstrap first, then use workflow-plan before hardware actions. Do not flash, repair, force writes, or run parallel hardware debug sessions unless I explicitly approve the current board and operation.
+把这个仓库作为 AI MCU 自动调试工具链使用。先运行 agent-bootstrap，再用 workflow-plan 判断下一步。除非我明确批准当前板卡和操作，否则不要烧录、修改代码、强制写入，也不要并行占用同一块板卡的调试接口。缺少 MCU 资料时向我索要，不要猜测资料地址。
 ```
 
-```text
-把这个仓库当作 AI MCU 自动化工具链使用。先运行 agent-bootstrap，再用 workflow-plan 判断下一步。除非我明确批准当前板卡和操作，否则不要烧录、修复代码、强制写入，也不要并行运行硬件调试会话。
-```
+## 自动化闭环
 
-## What It Automates / 自动化能力
+![AI MCU 自动调试闭环](docs/assets/closed-loop-workflow.png)
 
-![Closed loop workflow](docs/assets/closed-loop-workflow.png)
+- 自然语言目标：用户描述需求，Agent 规划步骤并调用工具。
+- 代码与构建：支持 CMake、命令式构建、Keil、PlatformIO 和 ESP-IDF 等现有工具链。
+- 在线调试：复位、暂停、恢复、断点、单步、核心寄存器和内存读写。
+- 运行观测：UART、RTT、SWO、外部日志命令以及串口直接采集。
+- 视觉观测：摄像头采集后通过标准 MCP 图像内容直接交给具备视觉能力的 AI 分析。
+- 知识约束：从用户提供的 SVD、linker、startup、datasheet、reference manual 和 errata 生成 `mcu_context.json`，防止猜测寄存器含义。
+- 证据报告：输出 JSON、Markdown、日志和可回放 handoff 包，为下一轮修复提供依据。
 
-- Natural-language loop: user goal -> agent plan -> code/build -> hardware debug -> UART observation -> evidence report -> repair iteration.
-- 自然语言闭环：用户目标 -> agent 规划 -> 写代码/构建 -> 硬件调试 -> UART 观测 -> 证据报告 -> 修复迭代。
-- Debug control: reset/halt, breakpoints, single-step, core register reads, guarded peripheral register access, memory reads, debug sequences.
-- 调试控制：reset/halt、断点、单步、核心寄存器读取、受保护的外设寄存器访问、内存读取和调试序列。
-- Knowledge guard and anti-hallucination: build `mcu_context.json` from user-provided SVD, linker/startup files, datasheets, reference manuals, errata, or document repositories.
-- 知识库防幻觉：从用户提供的 SVD、linker/startup、datasheet、reference manual、errata 或资料仓库生成 `mcu_context.json`。
-- Signal observation: `runtime-log` wraps existing UART/RTT/SWO tools, and `serial-log` / MCP `collect_serial_log` can read UART through pyserial.
-- 信号观测：`runtime-log` 复用已有 UART/RTT/SWO 工具，`serial-log` / MCP `collect_serial_log` 可通过 pyserial 读取串口。
-- Visual observation: `camera-scan`, `camera-capture`, and MCP `capture_board_image` collect image evidence, deterministic quality/change metrics, and a standard MCP image block for agent visual inspection.
-- 视觉观测：`camera-scan`、`camera-capture` 和 MCP `capture_board_image` 可采集图像证据、可重复的画质/变化指标，并通过标准 MCP 图像内容交给 agent 进行视觉分析。
-- Agent deployment: `agent-bootstrap`, `skill-bootstrap`, `mcp-config`, and `mcp-smoke` make the repo easy to hand to different AI coding agents.
-- Agent 部署：`agent-bootstrap`、`skill-bootstrap`、`mcp-config` 和 `mcp-smoke` 让不同 AI 编程工具更容易接入。
+## Agent 兼容
 
-Camera access is disabled by default because it captures the surrounding environment. Each scan or capture requires explicit `allow_camera=true` / `--allow-camera`. Visual appearance is supporting evidence only and must be correlated with debug, serial, build, and MCU-document evidence.
+![Agent 兼容与共享工具层](docs/assets/agent-toolchain-compatibility.png)
 
-摄像头会拍摄周边环境，因此默认禁用。每次扫描或采集都必须显式设置 `allow_camera=true` / `--allow-camera`。外观只能作为辅助证据，必须与调试、串口、构建和 MCU 资料证据交叉判断。
-
-## Agent Compatibility / Agent 兼容
-
-![Agent toolchain compatibility](docs/assets/agent-toolchain-compatibility.png)
-
-The project exposes the same capabilities through CLI, Python API, MCP tools, and a bundled skill. The goal is simple: most AI agents should be able to receive the repository URL and bootstrap themselves without private setup knowledge.
-
-项目通过 CLI、Python API、MCP 工具和内置 skill 暴露同一套能力。目标很直接：多数 AI agent 拿到仓库地址后，应能在没有私有背景信息的情况下自行完成部署检查。
+CLI、Python API、MCP 和内置 Skill 暴露同一套能力。多数 Agent 只需要仓库地址，就能完成环境检查和接入配置。
 
 ```powershell
 ai-mcu-debug agent-bootstrap --client codex --project .
@@ -82,28 +63,19 @@ ai-mcu-debug mcp-config --client generic-json --project .
 ai-mcu-debug mcp-smoke --project .
 ```
 
-`mcp-config` outputs verified stdio MCP snippets. For clients whose private config format is not public or stable, the tool emits a generic MCP JSON definition and points the agent back to the CLI flow instead of guessing.
+对于配置格式不公开或不稳定的客户端，`mcp-config` 会输出通用 MCP JSON，并保留仓库根目录下的 CLI 作为后备入口，不猜测私有配置。
 
-`mcp-config` 会输出可检查的 stdio MCP 配置片段。对于私有配置格式不公开或不稳定的客户端，工具会输出通用 MCP JSON，并让 agent 回退到 CLI 流程，而不是乱猜配置。
+## 核心模型
 
-## Bench, DUT, Instrument, Workflow / 核心概念
+![Bench、DUT、Instrument 与 Workflow](docs/assets/bench-dut-instrument.png)
 
-![Bench DUT Instrument](docs/assets/bench-dut-instrument.png)
+- `Bench`：由 DUT、仪器、接线说明、Workflow 和安全策略组成的可复现配置。
+- `DUT`：被测 MCU 板卡。
+- `Instrument`：调试探针、串口适配器、运行日志命令或可选摄像头。
+- `Workflow`：环境检查、构建、观测、调试和报告等可重复步骤。
+- `Evidence/Report`：可供其他 Agent 或工程师回放与审计的产物。
 
-- `Bench`: a reproducible setup made of a DUT, instruments, wiring notes, workflow, and safety policy.
-- `Bench`：由 DUT、仪器、接线说明、workflow 和安全策略组成的可复现实验台配置。
-- `DUT`: the device under test, for example an STM32F103 board.
-- `DUT`：被测设备，例如 STM32F103 开发板。
-- `Instrument`: debug probe, UART adapter, runtime-log command, or optional camera/signal tool.
-- `Instrument`：调试探针、UART 转接器、runtime-log 命令，或可选的摄像头/信号工具。
-- `Workflow`: repeatable steps such as doctor -> probe scan -> context check -> build -> serial observation -> read-only debug -> report.
-- `Workflow`：可复现步骤，例如 doctor -> probe scan -> context check -> build -> serial observation -> read-only debug -> report。
-- `Evidence/Report`: JSON/Markdown artifacts that another agent or engineer can replay or audit.
-- `Evidence/Report`：可供另一个 agent 或工程师回放和审计的 JSON/Markdown 产物。
-
-Start from these examples:
-
-可以从这些示例开始：
+配置示例：
 
 ```text
 configs/benches/stm32f103_minimal.yaml
@@ -117,18 +89,16 @@ configs/instruments/esp32c3_usb_serial_jtag.yaml
 configs/workflows/esp32c3_supermini_readonly_debug.yaml
 ```
 
-ESP32-C3 SuperMini is supported through an optional ESP-IDF backend. `doctor` discovers ESP-IDF installations managed by EIM or the VS Code extension, including Espressif OpenOCD and RISC-V GDB, without requiring them on the global `PATH`.
+## 已验证硬件
 
-ESP32-C3 SuperMini 通过可选 ESP-IDF backend 接入。`doctor` 可以发现由 EIM 或 VS Code 扩展管理的 ESP-IDF、Espressif OpenOCD 和 RISC-V GDB，不要求把它们加入全局 `PATH`。
-
-## Verified Hardware / 已验证硬件
-
-| Board / 板卡 | Status / 状态 | Verified path / 已验证路径 | Evidence / 验证内容 |
+| 板卡 | 状态 | 已验证路径 | 验证内容 |
 |---|---|---|---|
-| STM32F103RCT6 generic board | verified / 已验证 | DAPLink/CMSIS-DAP + OpenOCD + GDB | Cortex-M3 and 256 KiB Flash identity, build, flash verification, reset/halt, core-register and RAM reads, source breakpoint, single-step, and resume. NRST was not connected on the verified bench. / 已验证 Cortex-M3 与 256 KiB Flash 识别、构建、烧录校验、复位暂停、核心寄存器与 RAM 读取、源码断点、单步和恢复运行；验证时未连接 NRST。 |
-| ESP32-C3 SuperMini | verified debug link / 调试链路已验证 | Built-in USB Serial/JTAG + Espressif OpenOCD + RISC-V GDB | Chip and 4 MB Flash identity, registers, memory read, hardware breakpoint, single-step, resume, and serial log. / 已验证芯片与 4 MB Flash 识别、寄存器、内存读取、硬件断点、单步、恢复运行和串口日志。 |
+| STM32F103RCT6 通用板 | 已验证 | DAPLink/CMSIS-DAP + OpenOCD + GDB | Cortex-M3 与 256 KiB Flash 识别、构建、烧录校验、复位暂停、核心寄存器、RAM 读取、源码断点、单步和恢复运行。验证时未连接 NRST。 |
+| ESP32-C3 SuperMini | 调试链路已验证 | 内置 USB Serial/JTAG + Espressif OpenOCD + RISC-V GDB | 芯片与 4 MB Flash 识别、寄存器、内存读取、硬件断点、单步、恢复运行和串口日志。 |
 
-## Hardware Workflow / 硬件流程
+ESP32-C3 通过可选 ESP-IDF 后端接入。`doctor` 能发现 EIM 或 VS Code 扩展管理的 ESP-IDF、Espressif OpenOCD 和 RISC-V GDB，不要求加入全局 `PATH`。
+
+## 硬件调试流程
 
 ```powershell
 ai-mcu-debug resolve-chip --project . --chip STM32F103RCT6
@@ -141,9 +111,7 @@ ai-mcu-debug ai-debug --mode dry-run --workspace-config .embeddedskills/config.j
 ai-mcu-debug ai-debug --mode read-only --workspace-config .embeddedskills/config.json
 ```
 
-Optional embedded tools on Windows:
-
-Windows 上可选安装的嵌入式工具：
+Windows 可选环境：
 
 ```powershell
 winget install xpack-dev-tools.openocd
@@ -153,64 +121,53 @@ ai-mcu-debug doctor --debug-backend openocd-gdb
 ai-mcu-debug probe-scan
 ```
 
-UART observation example:
+## 串口观测
 
-串口观测示例：
-
-![Serial observation](docs/assets/serial-observation.png)
+![UART 串口观测与证据生成](docs/assets/serial-observation.png)
 
 ```powershell
 ai-mcu-debug serial-log --port COM3 --baud 115200 --duration-s 5 --output debug_runs/serial/latest.json
-ai-mcu-debug workflow-run --project . --chip STM32F103RCT6 --no-hardware
 ```
 
-Camera observation example (install the optional backend first):
+串口报告保留端口、波特率、时间范围、原始日志和观测结论。也可以通过 `runtime-log` 复用已有 UART、RTT、SWO 或外部日志工具。
 
-摄像头观测示例（先安装可选 backend）：
+## 摄像头与视觉 AI
+
+安装可选视觉依赖：
 
 ```powershell
 python -m pip install -e ".[vision]"
 ai-mcu-debug camera-scan --allow-camera
 ai-mcu-debug camera-capture --camera-index 0 --image-output debug_runs/vision/latest.jpg --report-output debug_runs/vision/latest.json --allow-camera
-ai-mcu-debug vision-analyze --image debug_runs/vision/latest.jpg --baseline debug_runs/vision/baseline.jpg
 ```
 
-MCP tools `camera_scan`, `capture_board_image`, and `analyze_board_image` expose the same flow. Successful image tools return both a JSON evidence report and a standard MCP image content block, allowing a vision-capable agent to inspect LEDs, displays, wiring, and visible board state without coupling this project to one model provider.
+MCP 工具 `camera_scan`、`capture_board_image` 和 `analyze_board_image` 提供相同能力。成功采集后会返回 JSON 证据和标准 MCP `image` 内容，视觉 Agent 可以直接查看 LED、显示屏、接线和板卡状态。
 
-MCP 工具 `camera_scan`、`capture_board_image` 和 `analyze_board_image` 提供同一流程。图像工具成功后会同时返回 JSON 证据报告和标准 MCP 图像内容，使具备视觉能力的 agent 能检查 LED、显示屏、接线和可见板卡状态，而不绑定特定模型供应商。
+摄像头会拍摄周边环境，因此默认禁用；每次扫描或采集必须显式设置 `allow_camera=true` 或 `--allow-camera`。采集结果默认写入被 Git 忽略的 `debug_runs/vision/`，不会自动发布到仓库。
 
-For handoff replay, keep `workflow-run --no-hardware` unless hardware access is explicitly intended; policy records this risk as `replay_workflow_run_may_touch_hardware` when the flag is absent.
+## Golden Suite 与公开证据
 
-handoff 回放时，除非明确要触碰硬件，否则保留 `workflow-run --no-hardware`；缺少该参数时策略会记录 `replay_workflow_run_may_touch_hardware` 风险。
+![Golden Suite 与证据报告](docs/assets/golden-suite-reports.png)
 
-## Golden Suites, Verified Boards, Reports / 公开证据
+公开仓库区分“能力声明”和“验证证据”。只有具备可复现 Workflow 和报告产物的板卡才标记为 `verified`，证据不足的板卡保持 `candidate`。
 
-![Golden suite reports](docs/assets/golden-suite-reports.png)
+- [Agent 快速接入](docs/AGENT_QUICKSTART.md)
+- [工具链模型](docs/AI_LAB_MODEL.md)
+- [Golden Suite](docs/GOLDEN_SUITES.md)
+- [已验证板卡](docs/VERIFIED_BOARDS.md)
+- [报告与证据](docs/REPORTS.md)
 
-The public repo separates claims from evidence. A board is only listed as verified when there is a reproducible workflow and report artifact. Candidate boards stay marked as candidates.
+![已验证板卡的证据要求](docs/assets/verified-board-evidence.png)
 
-公开仓库会区分“能力声明”和“证据”。只有具备可复现 workflow 与报告产物的板卡才列为 verified；候选板卡保持 candidate 标记。
+## 安全策略
 
-- [Agent Quickstart](docs/AGENT_QUICKSTART.md)
-- [Golden Suites](docs/GOLDEN_SUITES.md)
-- [Verified Boards](docs/VERIFIED_BOARDS.md)
-- [Reports](docs/REPORTS.md)
+- 同一块板卡的调试接口是独占资源，不并行运行 OpenOCD、GDB、pyOCD、J-Link、probe-rs 或其他硬件调试会话。
+- 烧录、代码修复、强制操作、寄存器/内存写入、option bytes 和时钟/复位控制写入都需要针对当前板卡的明确授权。
+- 工具默认向用户索要 MCU 资料，不自行搜索或猜测 datasheet URL。
+- 外设寄存器含义和写入约束必须来自 `mcu_context.json`；未知地址默认阻止。
+- `workflow-run --no-hardware` 是 handoff 回放的安全形式；缺少该参数时会记录硬件访问风险。
+- 摄像头访问默认关闭，采集画面默认不进入 Git。
 
-![Verified board evidence](docs/assets/verified-board-evidence.png)
-
-## Safety Policy / 安全策略
-
-- Hardware debug sessions are exclusive per board. Do not run OpenOCD/GDB/pyOCD/J-Link/probe-rs/debug commands in parallel against the same target.
-- 同一块板子的硬件调试会话必须独占。不要对同一目标并行运行 OpenOCD/GDB/pyOCD/J-Link/probe-rs/debug 命令。
-- Flash, repair, force, memory writes, option bytes, clock/reset-control writes, and standalone hardware replay require explicit approval for the current board.
-- 烧录、修复代码、强制操作、内存写入、option bytes、时钟/复位控制写入、独立硬件回放，都需要针对当前板卡明确批准。
-- The tool asks for MCU documents or a user-provided document repository. It does not guess datasheet URLs by default.
-- 工具会向用户索要 MCU 资料或用户提供的资料仓库，默认不猜 datasheet URL。
-- Unknown addresses and unsafe writes are blocked unless the user intentionally overrides the guard.
-- 未知地址和不安全写入会被阻止，除非用户明确要覆盖保护。
-
-## License / 许可证
-
-This project is open source under the [MIT License](LICENSE).
+## 许可证
 
 本项目基于 [MIT License](LICENSE) 开源。
